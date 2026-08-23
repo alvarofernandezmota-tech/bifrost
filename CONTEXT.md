@@ -1,8 +1,18 @@
 # bifrost — Context
 
-## Propósito
-Conectar Telegram con `diario.py` de midgaror para escribir entradas diarias desde el móvil.
+## Ubicación
+- **Ruta local:** `~/GitHub/personal/midgaror/diario/bifrost/`
+- **Ámbito:** Personal
+- **Repo GitHub:** https://github.com/alvarofernandezmota-tech/bifrost
 
-## Límites
-- Solo comandos de diario (no toca tareas/hábitos aún).
-- Solo texto plano (sin frontmatter complejo).
+## Propósito
+Bot Telegram para escribir en el diario personal (`midgaror/diario/diario.py`) desde el móvil.
+
+## Comandos de acceso
+```bash
+cd ~/GitHub/personal/midgaror/diario/bifrost
+```
+
+## Dependencias
+- `diario.py` en `~/GitHub/personal/midgaror/diario/diario.py`
+- Función: `escribir_entrada(texto)`
