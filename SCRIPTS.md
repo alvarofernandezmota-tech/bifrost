@@ -1,50 +1,65 @@
 # Scripts de Bifrost
 
+## Estructura de módulos
+
+bifrost/
+├─ bot.py # Punto de entrada del bot
+├─ handlers/ # Comandos de Telegram
+│ ├─ start.py # /start
+│ ├─ help.py # /help
+│ ├─ diario.py # /diario
+│ └─ entrada.py # /entrada
+├─ core/ # Lógica del diario
+│ ├─ organizar.py # organizar_texto()
+│ └─ bridge.py # escribir_entrada()
+└─ utils/ # Utilidades
+└─ auth.py # verificar_chat_autorizado()
+
+text
+
 ## bot.py
 
-**Propósito**: Script principal del bot de Telegram.
+**Propósito**: Punto de entrada principal del bot de Telegram.
 
 **Funciones**:
-- Escucha comandos de Telegram
-- Verifica que el chat esté autorizado
-- Llama a `organizar_texto()` y `escribir_entrada()` según el comando
-
-**Handlers (comandos)**:
-Ver [HANDLERS.md](HANDLERS.md) para documentación detallada de cada comando.
-
-| Comando | Función | Descripción |
-|---------|---------|-------------|
-| `/start` | `comando_inicio()` | Mensaje de bienvenida |
-| `/help` | `comando_ayuda()` | Muestra ayuda completa |
-| `/diario <texto>` | `comando_diario()` | Inserta texto en la entrada de hoy |
-| `/entrada <fecha> <texto>` | `comando_entrada()` | Crea/actualiza entrada para una fecha |
+- Inicia la aplicación de Telegram
+- Registra los handlers desde el módulo `handlers`
+- Carga variables de entorno y configura logging
 
 **Uso**:
 ```bash
 python3 bot.py
 ```
 
-## organizar_diario.py
+## handlers/ (comandos)
+
+Ver [HANDLERS.md](HANDLERS.md) para documentación detallada de cada comando.
+
+| Comando | Módulo | Función | Descripción |
+|---------|--------|---------|-------------|
+| `/start` | `handlers/start.py` | `comando_inicio()` | Mensaje de bienvenida |
+| `/help` | `handlers/help.py` | `comando_ayuda()` | Muestra ayuda completa |
+| `/diario <texto>` | `handlers/diario.py` | `comando_diario()` | Inserta texto en la entrada de hoy |
+| `/entrada <fecha> <texto>` | `handlers/entrada.py` | `comando_entrada()` | Crea/actualiza entrada para una fecha |
+
+## core/ (lógica del diario)
+
+### core/organizar.py
 
 **Propósito**: Inserta texto en la sección correcta de una entrada del diario.
 
 **Funciones**:
 - `organizar_texto(texto, ruta=None)` - Inserta texto en la entrada especificada o en la de hoy
 
-**Uso desde terminal**:
-```bash
-python3 organizar_diario.py --input "Texto a insertar" --output /ruta/a/entrada.md
-```
-
 **Uso desde Python**:
 ```python
-from organizar_diario import organizar_texto
+from core.organizar import organizar_texto
 organizar_texto("Texto a insertar")  # Usa entrada de hoy por defecto
 ```
 
-**Usado por**: `comando_diario()` en `bot.py`
+**Usado por**: `comando_diario()` en `handlers/diario.py`
 
-## bifrost_bridge.py
+### core/bridge.py
 
 **Propósito**: Funciones de escritura de entradas del diario.
 
@@ -53,11 +68,22 @@ organizar_texto("Texto a insertar")  # Usa entrada de hoy por defecto
 
 **Uso desde Python**:
 ```python
-from bifrost_bridge import escribir_entrada
+from core.bridge import escribir_entrada
 escribir_entrada("2026-08-30", "Hoy fue un gran día")
 ```
 
-**Usado por**: `comando_entrada()` en `bot.py`
+**Usado por**: `comando_entrada()` en `handlers/entrada.py`
+
+## utils/ (utilidades)
+
+### utils/auth.py
+
+**Propósito**: Funciones de autenticación y autorización.
+
+**Funciones**:
+- `verificar_chat_autorizado(update)` - Verifica que el mensaje viene del chat autorizado
+
+**Usado por**: Todos los handlers en `handlers/`
 
 ## Dependencias
 

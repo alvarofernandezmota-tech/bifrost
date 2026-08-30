@@ -4,7 +4,7 @@ import logging
 from telegram import Update
 from telegram.ext import ContextTypes
 from utils.auth import verificar_chat_autorizado
-from organizar_diario import organizar_texto
+from core.organizar import organizar_texto
 
 logger = logging.getLogger(__name__)
 

@@ -4,7 +4,7 @@ import logging
 from telegram import Update
 from telegram.ext import ContextTypes
 from utils.auth import verificar_chat_autorizado
-from bifrost_bridge import escribir_entrada
+from core.bridge import escribir_entrada
 
 logger = logging.getLogger(__name__)
 
