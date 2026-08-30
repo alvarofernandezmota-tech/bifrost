@@ -2,59 +2,45 @@
 
 ## Propósito
 
-Bifrost es un bot de Telegram que permite escribir entradas del diario personal mediante comandos de texto.
+Bifrost es un bot de Telegram que permite escribir entradas del diario personal mediante comandos.
 
 ## Decisiones de arquitectura
 
-### 1. Estructura modular
+### 1. Handlers importan de midgaror/diario/
 
-**Decisión**: Separar código en módulos independientes (`handlers/`, `core/`, `utils/`)
-
-**Razón**:
-- Cada handler en archivo independiente para facilitar mantenimiento
-- Lógica del diario (`core/`) separada de la interfaz de Telegram (`handlers/`)
-- Reutilizable desde otros scripts (ej: `midgaror/diario/`)
-
-### 2. Un único lugar de verdad
-
-**Decisión**: La lógica del diario vive en `bifrost/core/`, no en `midgaror/diario/`
+**Decisión**: Los handlers no duplican lógica, importan de `midgaror/diario/`
 
 **Razón**:
-- Evita duplicación de código
-- El bot y los scripts de terminal usan las mismas funciones
-- Más fácil de mantener y testear
+- Un único lugar de verdad para la lógica del diario
+- El bot y los scripts de terminal usan lo mismo
+- Más fácil de mantener
 
-### 3. Seguridad por chat autorizado
+### 2. Dos comandos separados
 
-**Decisión**: Verificar `TELEGRAM_CHAT_ID` en cada comando
-
-**Razón**:
-- Previene que otros usuarios usen el bot
-- Simple de implementar y mantener
-- Suficiente para uso personal
-
-### 4. Documentación en la raíz
-
-**Decisión**: Mantener README, CONTEXT, AGENTS, HANDLERS, SCRIPTS en la raíz
+**Decisión**: `/diario` organiza, `/entrada` solo escribe
 
 **Razón**:
-- Estándar de GitHub
-- Fácil acceso desde la página principal del repo
-- Separa documentación de código
+- `organizar_diario.py` tiene problemas con marcadores existentes
+- `bifrost_bridge.py` es más simple y fiable
+- El usuario elige según necesite organizar o no
+
+### 3. Entorno virtual
+
+**Decisión**: `venv/` en la raíz, no se commitea
+
+**Razón**:
+- Aísla dependencias del bot
+- No contamina el sistema
+- `.gitignore` ya lo excluye
 
 ## Relación con midgaror
 
-- `bifrost` es un submódulo de `midgaror`
-- `midgaror/diario/` puede importar funciones de `bifrost/core/`
-- El diario se escribe en `midgaror/diario/personal/YYYY/MM-mes/YYYY-MM-DD.md`
-
-## Dependencias
-
-- `python-telegram-bot` - Bot de Telegram
-- `python-dotenv` - Variables de entorno
+- `bifrost` es submódulo de `midgaror`
+- Importa scripts de `midgaror/diario/`
+- Escribe en `midgaror/diario/personal/`
 
 ## Estado actual
 
-✅ Estructura modular completada
-✅ Documentación alineada
-⏳ Pendiente: pruebas funcionales del bot
+✅ Bot funcional
+✅ Documentación completa
+⚠️ Pendiente: refactorizar `organizar_diario.py`

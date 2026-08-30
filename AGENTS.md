@@ -4,45 +4,38 @@
 
 Bifrost es un bot de Telegram para escribir y organizar entradas del diario personal.
 
-## Estructura del código
+## Estado actual
+
+✅ Bot funcional - Arranca y responde comandos
+⚠️ Pendiente - Refactorizar `organizar_diario.py` para manejar marcadores
+
+## Estructura
 
 bifrost/
-├─ bot.py # Punto de entrada (inicia el bot)
-├─ handlers/ # Comandos de Telegram
-│ ├─ start.py # /start
-│ ├─ help.py # /help
-│ ├─ diario.py # /diario
-│ └─ entrada.py # /entrada
-├─ core/ # Lógica del diario
-│ ├─ organizar.py # organizar_texto()
-│ └─ bridge.py # escribir_entrada()
-└─ utils/ # Utilidades
-└─ auth.py # verificar_chat_autorizado()
+├─ bot.py # Punto de entrada
+├─ handlers/
+│ ├─ diario.py # /diario → organizar_texto()
+│ └─ entrada.py # /entrada → escribir_entrada()
+├─ utils/
+│ └─ auth.py # (pendiente)
+├─ venv/ # (NO commitear)
+└─ docs/sesiones/
 
 text
 
-## Flujo de ejecución
+## Scripts en midgaror/diario/
 
-1. `bot.py` inicia la aplicación de Telegram
-2. Registra los handlers desde `handlers/__init__.py`
-3. Cada handler:
-   - Verifica autorización con `utils/auth.py`
-   - Llama a la función correspondiente en `core/`
-4. `core/organizar.py` y `core/bridge.py` escriben en el sistema de archivos
+- `organizar_diario.py` → organiza texto en secciones
+- `bifrost_bridge.py` → escribe sin organizar
+- `diario.py` → funciones auxiliares
 
-## Reglas para modificar código
+## Problemas conocidos
 
-- **Nunca** modificar `.env` (contiene secretos)
-- Usar `.env.example` como plantilla
-- Los handlers solo llaman a funciones de `core/`, no escriben directamente en archivos
-- Mantener imports relativos dentro del mismo módulo
+- `organizar_diario.py` no maneja bien entradas con marcadores `=======` existentes
+- Solución: refactorizar o usar `/entrada` para texto simple
+
+## Reglas
+
+- Nunca modificar `.env` (contiene secretos)
 - Documentar cambios en `docs/sesiones/`
-
-## Comandos disponibles
-
-| Comando | Handler | Función core |
-|---------|---------|--------------|
-| `/start` | `handlers/start.py` | - |
-| `/help` | `handlers/help.py` | - |
-| `/diario` | `handlers/diario.py` | `core.organizar.organizar_texto()` |
-| `/entrada` | `handlers/entrada.py` | `core.bridge.escribir_entrada()` |
+- Mantener imports de `midgaror/diario/` actualizados
