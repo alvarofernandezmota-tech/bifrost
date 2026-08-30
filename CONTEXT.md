@@ -1,7 +1,7 @@
 # bifrost — Context
 
 ## Ubicación
-- **Ruta local:** `~/GitHub/personal/midgaror/diario/bifrost/`
+- **Ruta local:** `~/GitHub/personal/midgaror/proyectos/bifrost/`
 - **Ámbito:** Personal
 - **Repo GitHub:** https://github.com/alvarofernandezmota-tech/bifrost
 
@@ -10,7 +10,7 @@ Bot Telegram para escribir en el diario personal (`midgaror/diario/diario.py`) d
 
 ## Comandos de acceso
 ```bash
-cd ~/GitHub/personal/midgaror/diario/bifrost
+cd ~/GitHub/personal/midgaror/proyectos/bifrost
 ```
 
 ## Dependencias
