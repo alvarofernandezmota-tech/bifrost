@@ -9,11 +9,15 @@
 - Verifica que el chat esté autorizado
 - Llama a `organizar_texto()` y `escribir_entrada()` según el comando
 
-**Comandos**:
-- `/start` - Mensaje de bienvenida
-- `/help` - Muestra ayuda
-- `/diario <texto>` - Inserta texto en la entrada de hoy
-- `/entrada <fecha> <texto>` - Crea/actualiza entrada para una fecha
+**Handlers (comandos)**:
+Ver [HANDLERS.md](HANDLERS.md) para documentación detallada de cada comando.
+
+| Comando | Función | Descripción |
+|---------|---------|-------------|
+| `/start` | `comando_inicio()` | Mensaje de bienvenida |
+| `/help` | `comando_ayuda()` | Muestra ayuda completa |
+| `/diario <texto>` | `comando_diario()` | Inserta texto en la entrada de hoy |
+| `/entrada <fecha> <texto>` | `comando_entrada()` | Crea/actualiza entrada para una fecha |
 
 **Uso**:
 ```bash
@@ -38,6 +42,8 @@ from organizar_diario import organizar_texto
 organizar_texto("Texto a insertar")  # Usa entrada de hoy por defecto
 ```
 
+**Usado por**: `comando_diario()` en `bot.py`
+
 ## bifrost_bridge.py
 
 **Propósito**: Funciones de escritura de entradas del diario.
@@ -50,6 +56,8 @@ organizar_texto("Texto a insertar")  # Usa entrada de hoy por defecto
 from bifrost_bridge import escribir_entrada
 escribir_entrada("2026-08-30", "Hoy fue un gran día")
 ```
+
+**Usado por**: `comando_entrada()` en `bot.py`
 
 ## Dependencias
 
