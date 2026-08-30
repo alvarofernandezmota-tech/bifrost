@@ -5,7 +5,7 @@ Ver README.md de esta carpeta.
 import argparse
 from pathlib import Path
 
-from diario import ruta_de_hoy, crear_desde_plantilla
+from core.diario import ruta_de_hoy, crear_desde_plantilla
 
 
 def organizar_texto(texto: str, ruta: Path = None) -> Path:
