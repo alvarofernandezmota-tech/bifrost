@@ -14,5 +14,5 @@ cd ~/GitHub/personal/midgaror/proyectos/bifrost
 ```
 
 ## Dependencias
-- `diario.py` en `~/GitHub/personal/midgaror/diario/diario.py`
+- `bifrost_bridge.py` en `~/GitHub/personal/midgaror/diario/bifrost_bridge.py` (ver ADR-009 de midgaror)
 - Función: `escribir_entrada(texto)`
