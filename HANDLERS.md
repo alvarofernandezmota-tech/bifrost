@@ -2,7 +2,20 @@
 
 Cada handler es un comando del bot de Telegram que responde a un `/comando`.
 
+## Ubicación en el código
+
+Todos los handlers están en `handlers/`:
+
+- `handlers/start.py` → `/start`
+- `handlers/help.py` → `/help`
+- `handlers/diario.py` → `/diario`
+- `handlers/entrada.py` → `/entrada`
+
+---
+
 ## `/start` - Mensaje de bienvenida
+
+**Módulo**: `handlers/start.py`
 
 **Función**: `comando_inicio()`
 
@@ -19,11 +32,13 @@ Comandos disponibles:
 
 text
 
-**Código**: `bot.py` líneas ~70-80
+**Código**: [`handlers/start.py`](handlers/start.py)
 
 ---
 
 ## `/help` - Mostrar ayuda
+
+**Módulo**: `handlers/help.py`
 
 **Función**: `comando_ayuda()`
 
@@ -44,11 +59,13 @@ Crea o actualiza una entrada para la fecha especificada (YYYY-MM-DD).
 
 text
 
-**Código**: `bot.py` líneas ~83-95
+**Código**: [`handlers/help.py`](handlers/help.py)
 
 ---
 
 ## `/diario <texto>` - Insertar texto en la entrada de hoy
+
+**Módulo**: `handlers/diario.py`
 
 **Función**: `comando_diario()`
 
@@ -73,16 +90,22 @@ text
 text
 
 **Flujo**:
-1. Verifica que el chat está autorizado
+1. Verifica que el chat está autorizado (`utils/auth.py`)
 2. Valida que hay texto después del comando
-3. Llama a `organizar_texto(texto)` de `organizar_diario.py`
+3. Llama a `organizar_texto(texto)` de `core/organizar.py`
 4. Devuelve la ruta del archivo guardado
 
-**Código**: `bot.py` líneas ~35-50
+**Código**: [`handlers/diario.py`](handlers/diario.py)
+
+**Dependencias**:
+- `utils/auth.verificar_chat_autorizado()`
+- `core.organizar.organizar_texto()`
 
 ---
 
 ## `/entrada <fecha> <texto>` - Crear/actualizar entrada
+
+**Módulo**: `handlers/entrada.py`
 
 **Función**: `comando_entrada()`
 
@@ -107,18 +130,24 @@ text
 text
 
 **Flujo**:
-1. Verifica que el chat está autorizado
+1. Verifica que el chat está autorizado (`utils/auth.py`)
 2. Valida que hay fecha y texto después del comando
-3. Llama a `escribir_entrada(fecha, texto)` de `bifrost_bridge.py`
+3. Llama a `escribir_entrada(fecha, texto)` de `core/bridge.py`
 4. Devuelve la ruta del archivo guardado
 
-**Código**: `bot.py` líneas ~53-68
+**Código**: [`handlers/entrada.py`](handlers/entrada.py)
+
+**Dependencias**:
+- `utils/auth.verificar_chat_autorizado()`
+- `core.bridge.escribir_entrada()`
 
 ---
 
 ## Funciones compartidas
 
-### `verificar_chat_autorizado(update)`
+### `utils/auth.verificar_chat_autorizado(update)`
+
+**Módulo**: `utils/auth.py`
 
 **Propósito**: Verifica que el mensaje viene del chat autorizado en `.env`.
 
@@ -130,24 +159,35 @@ text
 
 text
 
-**Código**: `bot.py` líneas ~25-32
+**Código**: [`utils/auth.py`](utils/auth.py)
 
 ---
 
 ## Conexiones entre handlers
 
-bot.py
-├─ verificar_chat_autorizado() ← usado por todos los handlers
-├─ comando_inicio() ← /start
-├─ comando_ayuda() ← /help
-├─ comando_diario() ← /diario
-│ └─ llama a → organizar_texto() (organizar_diario.py)
-└─ comando_entrada() ← /entrada
-└─ llama a → escribir_entrada() (bifrost_bridge.py)
+bot.py (punto de entrada)
+│
+└─ Application.run_polling()
+│
+├─ CommandHandler("start", comando_inicio)
+│ └─ handlers/start.py
+│
+├─ CommandHandler("help", comando_ayuda)
+│ └─ handlers/help.py
+│
+├─ CommandHandler("diario", comando_diario)
+│ └─ handlers/diario.py
+│ ├─ utils/auth.py (verificar_chat_autorizado)
+│ └─ core/organizar.py (organizar_texto)
+│
+└─ CommandHandler("entrada", comando_entrada)
+└─ handlers/entrada.py
+├─ utils/auth.py (verificar_chat_autorizado)
+└─ core/bridge.py (escribir_entrada)
 
 text
 
-Todos los handlers están en `bot.py` y comparten:
+Todos los handlers comparten:
 - Configuración de entorno (`.env`)
 - Logging
-- Verificación de seguridad (chat autorizado)
+- Verificación de seguridad (`utils/auth.py`)
