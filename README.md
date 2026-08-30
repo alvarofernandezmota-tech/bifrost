@@ -8,6 +8,7 @@ bifrost/
 ├─ bot.py # Script principal del bot (comandos de Telegram)
 ├─ organizar_diario.py # Inserta texto en la sección correcta de una entrada
 ├─ bifrost_bridge.py # Funciones de escritura de entradas (escribir_entrada)
+├─ SCRIPTS.md # Documentación de cada script
 ├─ .env # Token y chat_id (NO commitear, protegido por .gitignore)
 ├─ .env.example # Plantilla de variables de entorno
 ├─ .gitignore
@@ -47,13 +48,22 @@ python3 bot.py
 
 ## Comandos disponibles
 
-- `/diario <texto>` - Inserta texto en la sección "Qué ha pasado hoy" de la entrada del día
-- `/entrada <fecha> <texto>` - Crea o actualiza una entrada para una fecha específica
+| Comando | Descripción | Ejemplo |
+|---------|-------------|---------|
+| `/start` | Mensaje de bienvenida | `/start` |
+| `/help` | Muestra ayuda completa | `/help` |
+| `/diario <texto>` | Inserta texto en "Qué ha pasado hoy" de la entrada de hoy | `/diario Fui a caminar` |
+| `/entrada <fecha> <texto>` | Crea o actualiza entrada para una fecha | `/entrada 2026-08-30 Gran día` |
+
+## Scripts
+
+Ver [SCRIPTS.md](SCRIPTS.md) para documentación detallada de cada script.
 
 ## Documentación
 
 - [CONTEXT.md](CONTEXT.md) - Contexto y decisiones de arquitectura
 - [AGENTS.md](AGENTS.md) - Instrucciones para agentes AI
+- [SCRIPTS.md](SCRIPTS.md) - Documentación de scripts
 - [docs/sesiones/](docs/sesiones/) - Registro de sesiones de desarrollo
 
 ## Relación con midgaror
