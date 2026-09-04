@@ -136,10 +136,18 @@ python3 bot.py
 Los dos escriben dentro de la sección "Qué ha pasado hoy", con la hora
 delante, sin pisar lo que ya hubiera. Lo único que cambia es el día.
 
+## Seguridad
+
+- **El token no se pega en ningún sitio.** Vive solo en el `.env`, que está en
+  `.gitignore`. Si se filtra (un log pegado en un chat, una captura), se revoca
+  desde `@BotFather` con `/revoke` y se pone el nuevo en el `.env`.
+- Desde el 2026-09-04 el bot silencia el log de `httpx`, que imprimía la URL
+  completa de cada petición, token incluido, unas seis veces por minuto.
+
 ## Problemas conocidos
 
 - Sin autorización todavía: `utils/auth.py` está pendiente, así que el bot
-  responde a quien le escriba. No publiques el token.
+  responde a quien le escriba.
 - Corre en primer plano: aún no es servicio de systemd (fase 2b del plan).
 
 ## Documentación
