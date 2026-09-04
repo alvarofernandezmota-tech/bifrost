@@ -21,6 +21,8 @@ sys.path.insert(0, str(DIARIO / "tareas"))
 import tareas  # noqa: E402 (requiere sys.path previo)
 from sincronizar import sincronizar  # noqa: E402 (requiere sys.path previo)
 
+from utils.respuestas import breve  # noqa: E402 (coherencia con el resto de handlers)
+
 logger = logging.getLogger(__name__)
 
 AYUDA = (
@@ -33,7 +35,7 @@ AYUDA = (
 
 
 def _subir() -> str:
-    return sincronizar(tareas.RUTA_DATOS, "diario: tareas desde bifrost")
+    return breve(sincronizar(tareas.RUTA_DATOS, "diario: tareas desde bifrost"))
 
 
 async def comando_tarea(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -50,10 +52,10 @@ async def comando_tarea(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             accion = tareas.hecha if args[0] == "hecha" else tareas.borrar
             t = accion(int(args[1]))
             icono = "✅" if args[0] == "hecha" else "🗑️"
-            await update.message.reply_text(f"{icono} [{t['id']}] {t['texto']}\n{_subir()}")
+            await update.message.reply_text(f"{icono} [{t['id']}] {t['texto']} · {_subir()}")
             return
         t = tareas.agregar(" ".join(args))
-        await update.message.reply_text(f"✅ [{t['id']}] {t['texto']}\n{_subir()}")
+        await update.message.reply_text(f"✅ [{t['id']}] {t['texto']} · {_subir()}")
     except ValueError as e:
         await update.message.reply_text(f"⚠️ {e}")
     except Exception as e:

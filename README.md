@@ -18,9 +18,11 @@ bifrost/
 │ ├─ entrada.py # /entrada → escribir_entrada()
 │ ├─ tarea.py # /tarea, /tareas → diario/tareas/tareas.py
 │ ├─ habito.py # /habito, /habitos → diario/habitos/habitos.py
-│ └─ hoy.py # /hoy → leer_entrada + tareas + hábitos
+│ ├─ hoy.py # /hoy → leer_entrada + tareas + hábitos
+│ └─ texto.py # mensaje sin comando → diario de hoy
 ├─ utils/
-│ └─ auth.py # autorización por chat_id
+│ ├─ auth.py # autorización por chat_id
+│ └─ respuestas.py # cómo se contesta: breve si va bien, entero si falla
 ├─ venv/ # Entorno virtual (NO commitear)
 ├─ .env # Token y chat_id (NO commitear)
 ├─ .env.example # Plantilla
@@ -302,9 +304,21 @@ ayuda anterior los llevaba y se escribieron tal cual dos veces en el diario.
 | `/habito deporte 2026-09-03` | En otro día | idem |
 | `/habitos` · `/habitos semana` | El día, o la semana con totales | idem |
 | `/hoy` · `/hoy 2026-09-03` | Diario, tareas y hábitos juntos. **Solo lee** | `leer_entrada` + los dos módulos |
+| *(cualquier texto sin comando)* | Se apunta en el diario de hoy, igual que `/diario` | `diario/organizar_diario.py` |
 
-Los dos primeros escriben dentro de la sección "Qué ha pasado hoy", con la
-hora delante, sin pisar lo que ya hubiera. Lo único que cambia es el día.
+Los dos primeros, y el texto suelto, escriben dentro de la sección "Qué ha
+pasado hoy", con la hora delante, sin pisar lo que ya hubiera. Lo único que
+cambia es el día.
+
+**Escribir sin comando es lo normal.** El handler de texto libre se registra
+el último, así que los comandos mandan; solo recoge lo que no empieza por
+`/`. Sin él, mandar «hoy he dormido fatal» dejaba al bot callado y el texto
+se perdía.
+
+Las respuestas son cortas a propósito: `📔 Apuntado en el diario de hoy ·
+subido`. Antes cada escritura devolvía la ruta completa del fichero en el
+disco de Madre, que servía para depurar y en el móvil solo estorba. Los
+avisos sí salen enteros: si el push falla, hay que leerlo.
 
 Todo lo que escribe cualquier comando se commitea y se sube con
 `diario/sincronizar.py`: el diario con su mensaje de siempre, las tareas y

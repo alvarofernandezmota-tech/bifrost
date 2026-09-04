@@ -5,7 +5,7 @@ import logging
 import os
 from dotenv import load_dotenv
 from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
 # Importar handlers
 from handlers.diario import comando_diario
@@ -13,6 +13,7 @@ from handlers.entrada import comando_entrada
 from handlers.habito import comando_habito, comando_habitos
 from handlers.hoy import comando_hoy
 from handlers.tarea import comando_tarea, comando_tareas
+from handlers.texto import mensaje_libre
 from utils.auth import filtro_autorizado
 
 # Cargar variables de entorno
@@ -44,6 +45,7 @@ async def comando_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         "/tarea comprar el pan\n"
         "/habito deporte\n"
         "/hoy — el día de un vistazo\n\n"
+        "O escribe sin más: lo que mandes sin comando va al diario de hoy.\n"
         "/help para el resto."
     )
 
@@ -69,6 +71,9 @@ async def comando_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "/habito deporte 2026-09-03  en otro día\n"
         "/habitos                  los de hoy\n"
         "/habitos semana           la semana, con totales\n\n"
+        "SIN COMANDO\n"
+        "Escribe y ya: cualquier mensaje suelto se apunta en el diario de hoy,\n"
+        "igual que /diario.\n\n"
         "EL DÍA\n"
         "/hoy                      diario, tareas y hábitos juntos\n"
         "/hoy 2026-09-03           el de otro día\n\n"
@@ -98,6 +103,12 @@ def main() -> None:
     app.add_handler(CommandHandler("habito", comando_habito, filters=autorizado))
     app.add_handler(CommandHandler("habitos", comando_habitos, filters=autorizado))
     app.add_handler(CommandHandler("hoy", comando_hoy, filters=autorizado))
+
+    # El ultimo: cualquier texto que no sea un comando va al diario de hoy.
+    solo_texto = filters.TEXT & ~filters.COMMAND
+    if autorizado:
+        solo_texto &= autorizado
+    app.add_handler(MessageHandler(solo_texto, mensaje_libre))
 
     logger.info("🤖 Bot en marcha. Escuchando comandos...")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
