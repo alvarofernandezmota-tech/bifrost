@@ -26,9 +26,12 @@ ExecStart=/home/varopc/GitHub/personal/midgaror/proyectos/bifrost/venv/bin/pytho
 Environment=PYTHONUNBUFFERED=1
 Environment=PYTHONDONTWRITEBYTECODE=1
 
-# Telegram se cae, la red se va, el bot se reinicia solo. El tope de
-# reinicios esta arriba, en [Unit].
-Restart=on-failure
+# El bot tiene que volver siempre, salga como salga, salvo que alguien
+# haga systemctl stop. Con on-failure no volvia si lo mataban con SIGTERM,
+# porque python-telegram-bot lo captura y sale limpio con codigo 0, y eso
+# systemd no lo cuenta como fallo. Probado en Madre el 2026-09-04:
+# systemctl kill lo dejo inactive. El tope de reinicios esta en [Unit].
+Restart=always
 RestartSec=10s
 
 # El bot escribe en el diario y, desde diario/sincronizar.py, commitea y

@@ -169,9 +169,9 @@ journalctl -u bifrost -f           # ver el log en vivo
 
 ### Qué hace la unidad
 
-- **Se reinicia solo** si el bot muere: la red se va, Telegram falla. Con un
-  tope de 5 reinicios en 5 minutos, para que un error de configuración no
-  entre en bucle.
+- **Se reinicia siempre** que el proceso termine, salga limpio o no. Solo
+  `systemctl stop` lo deja parado. Con un tope de 5 reinicios en 5 minutos,
+  para que un error de configuración no entre en bucle.
 - **El token no pasa por systemd.** Lo sigue leyendo `python-dotenv` del
   `.env`, así que no aparece en `systemctl show` ni en el volcado de la
   unidad.
@@ -200,14 +200,23 @@ Instalarlo no demuestra nada. Estas cuatro pruebas sí, y son la fase 2b:
 
 **1. Que resucita si lo matan**
 
+Dos formas de morir, y tiene que volver de las dos:
+
 ```bash
-sudo systemctl kill bifrost
-sleep 15
-systemctl status bifrost
+sudo systemctl kill bifrost              # SIGTERM: el bot lo captura y sale limpio
+sleep 15; systemctl is-active bifrost    # -> active
+
+sudo systemctl kill -s SIGKILL bifrost   # muerte súbita, sin tiempo a nada
+sleep 15; systemctl is-active bifrost    # -> active
 ```
 
-Debe volver a estar `active (running)`, con un PID distinto. Si sale
-`failed`, la unidad no está haciendo su trabajo.
+La primera es la trampa: python-telegram-bot captura SIGTERM y sale con
+código 0, y systemd no cuenta una salida limpia como fallo. Con
+`Restart=on-failure` el bot **no volvía**; se vio en Madre el 2026-09-04,
+`inactive` tras el kill. Por eso la unidad lleva `Restart=always`: vuelve
+salga como salga, salvo que alguien haga `systemctl stop` a propósito.
+
+Si sale `inactive` o `failed`, la unidad no está haciendo su trabajo.
 
 **2. Que arranca solo al encender la máquina**
 
