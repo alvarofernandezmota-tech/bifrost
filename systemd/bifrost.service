@@ -1,0 +1,48 @@
+# Unidad de systemd para bifrost.
+# Instalacion y comandos: ver README.md, seccion "Como servicio".
+#
+# Las rutas llevan el usuario y la ubicacion reales de Madre. Si el repo
+# vive en otro sitio, hay que cambiarlas antes de copiar la unidad.
+
+[Unit]
+Description=bifrost - bot de Telegram para el diario personal
+Documentation=https://github.com/alvarofernandezmota-tech/bifrost
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=varopc
+Group=varopc
+WorkingDirectory=/home/varopc/GitHub/personal/midgaror/proyectos/bifrost
+ExecStart=/home/varopc/GitHub/personal/midgaror/proyectos/bifrost/venv/bin/python bot.py
+
+# El token NO se pasa por systemd: lo lee python-dotenv del .env. Asi no
+# aparece en `systemctl show` ni en el volcado de la unidad.
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+
+# Telegram se cae, la red se va, el bot se reinicia solo. Con tope, para
+# que un fallo de configuracion no genere un bucle de reinicios.
+Restart=on-failure
+RestartSec=10s
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+# El bot escribe en el diario y, desde diario/sincronizar.py, commitea y
+# empuja. git escribe en .git/, que esta en la raiz del repo, asi que el
+# permiso tiene que cubrir el repo entero: con solo diario/personal el
+# commit falla siempre. Fuera del repo, todo de solo lectura.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/varopc/GitHub/personal/midgaror
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target

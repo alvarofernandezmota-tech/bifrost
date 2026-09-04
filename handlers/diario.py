@@ -13,6 +13,7 @@ DIARIO = MIDGAROR / "diario"
 sys.path.insert(0, str(DIARIO))
 
 from organizar_diario import organizar_texto  # noqa: E402 (requiere sys.path previo)
+from sincronizar import sincronizar  # noqa: E402 (requiere sys.path previo)
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ async def comando_diario(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
     try:
         ruta = organizar_texto(texto)
-        await update.message.reply_text(f"✅ Guardado en: {ruta}")
+        await update.message.reply_text(f"✅ {sincronizar(ruta)}\n{ruta}")
     except Exception as e:
         logger.exception("Error escribiendo en el diario de hoy")
         await update.message.reply_text(f"❌ Error: {e}")

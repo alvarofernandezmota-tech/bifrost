@@ -128,6 +128,148 @@ source venv/bin/activate
 python3 bot.py
 ```
 
+## Como servicio
+
+Para que el bot no dependa de una terminal abierta. La unidad está en
+[`systemd/bifrost.service`](systemd/bifrost.service).
+
+**Antes de instalarla**, comprueba que las rutas del fichero coinciden con
+las tuyas. Llevan `varopc` y `~/GitHub/personal/midgaror` escritos dentro:
+
+```bash
+grep -E "User=|WorkingDirectory=|ExecStart=|ReadWritePaths=" systemd/bifrost.service
+```
+
+Instalación:
+
+```bash
+sudo cp systemd/bifrost.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now bifrost
+```
+
+Comprobación:
+
+```bash
+systemctl status bifrost
+journalctl -u bifrost -n 30 --no-pager
+```
+
+En el arranque debe aparecer `Bot en marcha` y, si tienes puesto el chat_id,
+`Autorizacion activa para 1 chat(s)`. Si en su lugar sale el aviso de que
+responde a cualquiera, te falta `TELEGRAM_CHAT_ID` en el `.env`.
+
+### Comandos del día a día
+
+```bash
+sudo systemctl restart bifrost     # tras cambiar código o .env
+sudo systemctl stop bifrost        # pararlo
+journalctl -u bifrost -f           # ver el log en vivo
+```
+
+### Qué hace la unidad
+
+- **Se reinicia solo** si el bot muere: la red se va, Telegram falla. Con un
+  tope de 5 reinicios en 5 minutos, para que un error de configuración no
+  entre en bucle.
+- **El token no pasa por systemd.** Lo sigue leyendo `python-dotenv` del
+  `.env`, así que no aparece en `systemctl show` ni en el volcado de la
+  unidad.
+- **Solo puede escribir dentro del repo midgaror.** El resto del disco lo ve
+  de solo lectura. Tiene que ser el repo entero y no solo `diario/personal/`,
+  porque al commitear git escribe en `.git/`, que está en la raíz.
+
+### Dónde vive y qué toca
+
+| Cosa | Dónde |
+|------|-------|
+| Código | `~/GitHub/personal/midgaror/proyectos/bifrost/` |
+| Entorno virtual | `proyectos/bifrost/venv/` |
+| Token y chat_id | `proyectos/bifrost/.env` (nunca se commitea) |
+| Unidad | `/etc/systemd/system/bifrost.service` |
+| Lo que escribe | `~/GitHub/personal/midgaror/diario/personal/AAAA/MM-mes/AAAA-MM-DD.md` |
+| Logs | `journalctl -u bifrost` |
+| Lógica del diario | `~/GitHub/personal/midgaror/diario/` (no está en este repo) |
+
+El bot **escribe ficheros, no hace commit**. Las entradas viven en el disco
+de Madre hasta que alguien las commitea a mano.
+
+### Comprobar que no se muere
+
+Instalarlo no demuestra nada. Estas cuatro pruebas sí, y son la fase 2b:
+
+**1. Que resucita si lo matan**
+
+```bash
+sudo systemctl kill bifrost
+sleep 15
+systemctl status bifrost
+```
+
+Debe volver a estar `active (running)`, con un PID distinto. Si sale
+`failed`, la unidad no está haciendo su trabajo.
+
+**2. Que arranca solo al encender la máquina**
+
+```bash
+sudo reboot
+# cuando vuelva:
+systemctl is-enabled bifrost    # -> enabled
+systemctl is-active bifrost     # -> active
+```
+
+Y lo que de verdad importa: escríbele por Telegram y comprueba que responde
+sin que hayas tocado nada.
+
+**3. Que aguanta un corte de red**
+
+En una máquina a la que llegas por SSH, **no pares la red**: te quedas fuera.
+La forma segura es esperar a que pase de verdad y mirarlo después:
+
+```bash
+systemctl show bifrost -p NRestarts
+journalctl -u bifrost --since "1 day ago" | grep -iE "error|restart|network"
+```
+
+Si `NRestarts` sube solo, el bot se está muriendo por algo. Si sube y vuelve
+solo, la unidad está cumpliendo.
+
+**4. Que no se descuadra escribiendo**
+
+Después de unos días de uso:
+
+```bash
+cd ~/GitHub/personal/midgaror
+git status diario/personal/
+git diff diario/personal/
+```
+
+Las entradas deben tener la hora delante y estar dentro de "Qué ha pasado
+hoy", sin duplicados ni texto pegado al final del fichero.
+
+### Qué anotar durante las dos semanas
+
+La fase 2b pide uso real, y de eso salen datos. Vale con apuntar en la sesión
+de trabajo, al final de cada semana:
+
+- Cuántas veces se reinició (`NRestarts`) y por qué.
+- Si alguna vez no respondió, y qué decía el log en ese momento.
+- Si el formato de alguna entrada quedó raro.
+- Cuántas veces lo usaste de verdad. Si la respuesta es "casi ninguna", eso
+  también es un resultado, y más útil que cualquier mejora técnica.
+
+### Cuidado al actualizar
+
+Systemd arranca el bot con el Python del entorno virtual. Si rehaces el
+`venv`, o si Arch sube de versión menor de Python y el entorno se queda
+huérfano, el servicio deja de arrancar. Se ve claro en el log:
+
+```bash
+journalctl -u bifrost -n 20 --no-pager
+```
+
+Se arregla recreando el entorno y reiniciando el servicio.
+
 ## Comandos
 
 | Comando | Descripción |

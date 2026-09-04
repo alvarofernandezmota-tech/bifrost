@@ -14,6 +14,7 @@ DIARIO = MIDGAROR / "diario"
 sys.path.insert(0, str(DIARIO))
 
 from bifrost_bridge import escribir_entrada  # noqa: E402 (requiere sys.path previo)
+from sincronizar import sincronizar  # noqa: E402 (requiere sys.path previo)
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +38,7 @@ async def comando_entrada(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     try:
         ruta = escribir_entrada(texto, fecha)
-        await update.message.reply_text(f"✅ Guardado en: {ruta}")
+        await update.message.reply_text(f"✅ {sincronizar(ruta)}\n{ruta}")
     except Exception as e:
         logger.exception("Error escribiendo la entrada del %s", fecha)
         await update.message.reply_text(f"❌ Error: {e}")
