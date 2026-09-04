@@ -29,14 +29,15 @@ RestartSec=10s
 StartLimitIntervalSec=300
 StartLimitBurst=5
 
-# El bot solo necesita escribir en el diario. Todo lo demas, de solo
-# lectura: si algun dia se cuela algo por un comando, no puede tocar el
-# sistema ni el resto del repo.
+# El bot escribe en el diario y, desde diario/sincronizar.py, commitea y
+# empuja. git escribe en .git/, que esta en la raiz del repo, asi que el
+# permiso tiene que cubrir el repo entero: con solo diario/personal el
+# commit falla siempre. Fuera del repo, todo de solo lectura.
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=read-only
-ReadWritePaths=/home/varopc/GitHub/personal/midgaror/diario/personal
+ReadWritePaths=/home/varopc/GitHub/personal/midgaror
 ProtectKernelTunables=true
 ProtectKernelModules=true
 ProtectControlGroups=true

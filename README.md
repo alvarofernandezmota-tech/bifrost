@@ -175,8 +175,9 @@ journalctl -u bifrost -f           # ver el log en vivo
 - **El token no pasa por systemd.** Lo sigue leyendo `python-dotenv` del
   `.env`, así que no aparece en `systemctl show` ni en el volcado de la
   unidad.
-- **Solo puede escribir en `diario/personal/`.** El resto del disco, incluido
-  el resto del repo, lo ve de solo lectura.
+- **Solo puede escribir dentro del repo midgaror.** El resto del disco lo ve
+  de solo lectura. Tiene que ser el repo entero y no solo `diario/personal/`,
+  porque al commitear git escribe en `.git/`, que está en la raíz.
 
 ### Dónde vive y qué toca
 
