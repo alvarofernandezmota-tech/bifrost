@@ -15,9 +15,12 @@ bifrost/
 ├─ handlers/
 │ ├─ _init_.py
 │ ├─ diario.py # /diario → organizar_texto()
-│ └─ entrada.py # /entrada → escribir_entrada()
+│ ├─ entrada.py # /entrada → escribir_entrada()
+│ ├─ tarea.py # /tarea, /tareas → diario/tareas/tareas.py
+│ ├─ habito.py # /habito, /habitos → diario/habitos/habitos.py
+│ └─ hoy.py # /hoy → leer_entrada + tareas + hábitos
 ├─ utils/
-│ └─ auth.py # (pendiente de implementar)
+│ └─ auth.py # autorización por chat_id
 ├─ venv/ # Entorno virtual (NO commitear)
 ├─ .env # Token y chat_id (NO commitear)
 ├─ .env.example # Plantilla
@@ -283,13 +286,34 @@ Se arregla recreando el entorno y reiniciando el servicio.
 
 | Comando | Descripción |
 |---------|-------------|
-| `/start` | Mensaje de bienvenida |
-| `/help` | Muestra ayuda |
-| `/diario <texto>` | Escribe en la entrada de **hoy** (usa `midgaror/diario/organizar_diario.py`) |
-| `/entrada <AAAA-MM-DD> <texto>` | Escribe en la entrada de **ese día** (usa `midgaror/diario/bifrost_bridge.py`) |
+Los ejemplos son literales: se escribe lo que se ve, **sin `<` ni `>`**. La
+ayuda anterior los llevaba y se escribieron tal cual dos veces en el diario.
 
-Los dos escriben dentro de la sección "Qué ha pasado hoy", con la hora
-delante, sin pisar lo que ya hubiera. Lo único que cambia es el día.
+| Comando | Qué hace | Lógica en midgaror |
+|---------|----------|--------------------|
+| `/start` | Bienvenida con los cuatro comandos del día a día | — |
+| `/help` | Ayuda completa | — |
+| `/diario hoy he dormido fatal` | Añade el texto a la entrada de **hoy** | `diario/organizar_diario.py` |
+| `/entrada 2026-09-03 se me olvidó esto` | Lo mismo en **ese día** | `diario/bifrost_bridge.py` |
+| `/tarea comprar el pan` | Apunta una tarea | `diario/tareas/tareas.py` |
+| `/tarea hecha 3` · `/tarea borrar 3` | La cierra o la retira | idem |
+| `/tareas` | Pendientes y últimas hechas | idem |
+| `/habito deporte` · `/habito no meditar` | Apunta un hábito de hoy | `diario/habitos/habitos.py` |
+| `/habito deporte 2026-09-03` | En otro día | idem |
+| `/habitos` · `/habitos semana` | El día, o la semana con totales | idem |
+| `/hoy` · `/hoy 2026-09-03` | Diario, tareas y hábitos juntos. **Solo lee** | `leer_entrada` + los dos módulos |
+
+Los dos primeros escriben dentro de la sección "Qué ha pasado hoy", con la
+hora delante, sin pisar lo que ya hubiera. Lo único que cambia es el día.
+
+Todo lo que escribe cualquier comando se commitea y se sube con
+`diario/sincronizar.py`: el diario con su mensaje de siempre, las tareas y
+los hábitos con el suyo. `/hoy` no escribe nada, así que no sube nada.
+
+**Ninguna lógica vive aquí.** Los handlers traducen el mensaje de Telegram a
+una llamada y la respuesta a texto; lo que decide qué se guarda y cómo está
+en midgaror, con sus pruebas (ADR-009 y la regla de arquitectura de
+`plan-bot.md`). Por eso no hay base de datos en este repo.
 
 ## Seguridad
 

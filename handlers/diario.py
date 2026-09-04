@@ -22,7 +22,9 @@ async def comando_diario(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     """Comando /diario."""
     texto = " ".join(context.args)
     if not texto:
-        await update.message.reply_text("❌ Uso: /diario <texto>")
+        await update.message.reply_text(
+            "❌ Escribe el texto detrás del comando, sin < ni >:\n"
+            "/diario hoy he dormido fatal")
         return
 
     try:
