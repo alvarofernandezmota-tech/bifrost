@@ -22,6 +22,14 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO
 )
+
+# httpx registra la URL completa de cada peticion a la API de Telegram, y esa
+# URL lleva el token dentro. A nivel INFO eso escupe el token en cada sondeo,
+# unas seis veces por minuto, a la terminal y a cualquier log que se guarde o
+# se pegue en un chat. Silenciado a WARNING: los errores se siguen viendo.
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+
 logger = logging.getLogger(__name__)
 
 
