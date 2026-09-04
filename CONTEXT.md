@@ -17,12 +17,16 @@ Bifrost es un bot de Telegram que permite escribir entradas del diario personal 
 
 ### 2. Dos comandos separados
 
-**Decisión**: `/diario` organiza, `/entrada` solo escribe
+**Decisión**: `/diario` escribe en hoy, `/entrada` en la fecha que se le diga
 
-**Razón**:
-- `organizar_diario.py` tiene problemas con marcadores existentes
-- `bifrost_bridge.py` es más simple y fiable
-- El usuario elige según necesite organizar o no
+**Razón** (actualizada 2026-09-04):
+- La razón original era que `organizar_diario.py` fallaba con marcadores
+  existentes, así que `/entrada` escribía "sin organizar". Ese fallo ya no
+  existe: los `=======` son separadores del autor, no un problema de formato.
+- Los dos comandos usan hoy el mismo camino de escritura, dentro de la
+  sección "Qué ha pasado hoy". Lo único que cambia es el día de destino.
+- `/entrada` estuvo roto desde el principio: pasaba una fecha que
+  `escribir_entrada` no aceptaba.
 
 ### 3. Entorno virtual
 
@@ -43,4 +47,5 @@ Bifrost es un bot de Telegram que permite escribir entradas del diario personal 
 
 ✅ Bot funcional
 ✅ Documentación completa
-⚠️ Pendiente: refactorizar `organizar_diario.py`
+✅ `/entrada` arreglado y probado (2026-09-04)
+⚠️ Pendiente: prueba real contra Telegram, servicio systemd en Madre y autorización por chat_id
