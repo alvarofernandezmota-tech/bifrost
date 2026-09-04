@@ -9,6 +9,10 @@ Description=bifrost - bot de Telegram para el diario personal
 Documentation=https://github.com/alvarofernandezmota-tech/bifrost
 After=network-online.target
 Wants=network-online.target
+# Tope de reinicios: 5 en 5 minutos. Va en [Unit], no en [Service]: puesto
+# en [Service] systemd lo ignora con un aviso y el tope no existe.
+StartLimitIntervalSec=300
+StartLimitBurst=5
 
 [Service]
 Type=simple
@@ -22,12 +26,13 @@ ExecStart=/home/varopc/GitHub/personal/midgaror/proyectos/bifrost/venv/bin/pytho
 Environment=PYTHONUNBUFFERED=1
 Environment=PYTHONDONTWRITEBYTECODE=1
 
-# Telegram se cae, la red se va, el bot se reinicia solo. Con tope, para
-# que un fallo de configuracion no genere un bucle de reinicios.
-Restart=on-failure
+# El bot tiene que volver siempre, salga como salga, salvo que alguien
+# haga systemctl stop. Con on-failure no volvia si lo mataban con SIGTERM,
+# porque python-telegram-bot lo captura y sale limpio con codigo 0, y eso
+# systemd no lo cuenta como fallo. Probado en Madre el 2026-09-04:
+# systemctl kill lo dejo inactive. El tope de reinicios esta en [Unit].
+Restart=always
 RestartSec=10s
-StartLimitIntervalSec=300
-StartLimitBurst=5
 
 # El bot escribe en el diario y, desde diario/sincronizar.py, commitea y
 # empuja. git escribe en .git/, que esta en la raiz del repo, asi que el
