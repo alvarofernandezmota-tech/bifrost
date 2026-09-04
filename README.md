@@ -178,6 +178,85 @@ journalctl -u bifrost -f           # ver el log en vivo
 - **Solo puede escribir en `diario/personal/`.** El resto del disco, incluido
   el resto del repo, lo ve de solo lectura.
 
+### Dónde vive y qué toca
+
+| Cosa | Dónde |
+|------|-------|
+| Código | `~/GitHub/personal/midgaror/proyectos/bifrost/` |
+| Entorno virtual | `proyectos/bifrost/venv/` |
+| Token y chat_id | `proyectos/bifrost/.env` (nunca se commitea) |
+| Unidad | `/etc/systemd/system/bifrost.service` |
+| Lo que escribe | `~/GitHub/personal/midgaror/diario/personal/AAAA/MM-mes/AAAA-MM-DD.md` |
+| Logs | `journalctl -u bifrost` |
+| Lógica del diario | `~/GitHub/personal/midgaror/diario/` (no está en este repo) |
+
+El bot **escribe ficheros, no hace commit**. Las entradas viven en el disco
+de Madre hasta que alguien las commitea a mano.
+
+### Comprobar que no se muere
+
+Instalarlo no demuestra nada. Estas cuatro pruebas sí, y son la fase 2b:
+
+**1. Que resucita si lo matan**
+
+```bash
+sudo systemctl kill bifrost
+sleep 15
+systemctl status bifrost
+```
+
+Debe volver a estar `active (running)`, con un PID distinto. Si sale
+`failed`, la unidad no está haciendo su trabajo.
+
+**2. Que arranca solo al encender la máquina**
+
+```bash
+sudo reboot
+# cuando vuelva:
+systemctl is-enabled bifrost    # -> enabled
+systemctl is-active bifrost     # -> active
+```
+
+Y lo que de verdad importa: escríbele por Telegram y comprueba que responde
+sin que hayas tocado nada.
+
+**3. Que aguanta un corte de red**
+
+En una máquina a la que llegas por SSH, **no pares la red**: te quedas fuera.
+La forma segura es esperar a que pase de verdad y mirarlo después:
+
+```bash
+systemctl show bifrost -p NRestarts
+journalctl -u bifrost --since "1 day ago" | grep -iE "error|restart|network"
+```
+
+Si `NRestarts` sube solo, el bot se está muriendo por algo. Si sube y vuelve
+solo, la unidad está cumpliendo.
+
+**4. Que no se descuadra escribiendo**
+
+Después de unos días de uso:
+
+```bash
+cd ~/GitHub/personal/midgaror
+git status diario/personal/
+git diff diario/personal/
+```
+
+Las entradas deben tener la hora delante y estar dentro de "Qué ha pasado
+hoy", sin duplicados ni texto pegado al final del fichero.
+
+### Qué anotar durante las dos semanas
+
+La fase 2b pide uso real, y de eso salen datos. Vale con apuntar en la sesión
+de trabajo, al final de cada semana:
+
+- Cuántas veces se reinició (`NRestarts`) y por qué.
+- Si alguna vez no respondió, y qué decía el log en ese momento.
+- Si el formato de alguna entrada quedó raro.
+- Cuántas veces lo usaste de verdad. Si la respuesta es "casi ninguna", eso
+  también es un resultado, y más útil que cualquier mejora técnica.
+
 ### Cuidado al actualizar
 
 Systemd arranca el bot con el Python del entorno virtual. Si rehaces el
