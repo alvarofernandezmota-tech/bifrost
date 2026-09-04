@@ -1,8 +1,9 @@
 """Handler para el comando /diario."""
 
-import sys
 import logging
+import sys
 from pathlib import Path
+
 from telegram import Update
 from telegram.ext import ContextTypes
 
@@ -11,7 +12,7 @@ MIDGAROR = Path(__file__).resolve().parent.parent.parent.parent
 DIARIO = MIDGAROR / "diario"
 sys.path.insert(0, str(DIARIO))
 
-from organizar_diario import organizar_texto
+from organizar_diario import organizar_texto  # noqa: E402 (requiere sys.path previo)
 
 logger = logging.getLogger(__name__)
 
@@ -27,5 +28,5 @@ async def comando_diario(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         ruta = organizar_texto(texto)
         await update.message.reply_text(f"✅ Guardado en: {ruta}")
     except Exception as e:
-        logger.error(f"Error: {e}")
+        logger.exception("Error escribiendo en el diario de hoy")
         await update.message.reply_text(f"❌ Error: {e}")
