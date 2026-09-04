@@ -28,7 +28,21 @@ Bifrost es un bot de Telegram que permite escribir entradas del diario personal 
 - `/entrada` estuvo roto desde el principio: pasaba una fecha que
   `escribir_entrada` no aceptaba.
 
-### 3. Entorno virtual
+### 3. Autorización por filtro, no por comprobación en cada handler
+
+**Decisión**: el filtro de chats autorizados se aplica al registrar los
+`CommandHandler`, no dentro de cada handler.
+
+**Razón**:
+- Un handler nuevo no puede olvidarse de comprobar el permiso: o se registra
+  con el filtro o no se registra.
+- Los no autorizados no reciben respuesta, que es lo que interesa: contestar
+  confirma que el bot existe.
+- Sin `TELEGRAM_CHAT_ID` el filtro es `None` y el bot responde a todos, como
+  antes. Actualizar no rompe una instalación existente; el aviso del log es
+  lo que empuja a configurarlo.
+
+### 4. Entorno virtual
 
 **Decisión**: `venv/` en la raíz, no se commitea
 
@@ -45,7 +59,8 @@ Bifrost es un bot de Telegram que permite escribir entradas del diario personal 
 
 ## Estado actual
 
-✅ Bot funcional
+✅ Bot funcional y probado contra Telegram (2026-09-04)
 ✅ Documentación completa
-✅ `/entrada` arreglado y probado (2026-09-04)
-⚠️ Pendiente: prueba real contra Telegram, servicio systemd en Madre y autorización por chat_id
+✅ `/entrada` arreglado
+✅ Autorización por chat_id (`utils/auth.py`)
+⚠️ Pendiente: servicio systemd en Madre

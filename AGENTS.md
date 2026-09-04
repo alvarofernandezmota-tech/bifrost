@@ -8,7 +8,9 @@ Bifrost es un bot de Telegram para escribir y organizar entradas del diario pers
 
 ✅ Bot funcional - Arranca y responde comandos
 ✅ `/entrada` arreglado (2026-09-04): pasaba una fecha que la funcion no aceptaba
-⚠️ Pendiente - Probar contra Telegram real y dejarlo como servicio en Madre
+✅ Probado contra Telegram real (2026-09-04): escribe en el diario
+✅ Autorizacion por chat_id (2026-09-04): `utils/auth.py`
+⚠️ Pendiente - Dejarlo como servicio de systemd en Madre
 
 ## Estructura
 
@@ -18,7 +20,7 @@ bifrost/
 │ ├─ diario.py # /diario → organizar_texto()
 │ └─ entrada.py # /entrada → escribir_entrada()
 ├─ utils/
-│ └─ auth.py # (pendiente)
+│ └─ auth.py # filtro de chats autorizados (TELEGRAM_CHAT_ID)
 ├─ venv/ # (NO commitear)
 └─ docs/sesiones/
 
@@ -35,7 +37,7 @@ text
 - Ninguno abierto en el codigo. Los marcadores `=======` no eran un fallo:
   son separadores propios del autor entre ratos del dia, y `organizar_texto`
   escribe dentro de la seccion sin tocarlos.
-- Falta autorizacion por chat_id (`utils/auth.py`).
+- El bot corre en primer plano: falta la unidad de systemd (fase 2b).
 
 ## Reglas
 
