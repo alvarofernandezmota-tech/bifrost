@@ -24,7 +24,9 @@ FECHA_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 async def comando_entrada(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Comando /entrada <AAAA-MM-DD> <texto>."""
     if len(context.args) < 2:
-        await update.message.reply_text("❌ Uso: /entrada <AAAA-MM-DD> <texto>")
+        await update.message.reply_text(
+            "❌ Escribe la fecha y el texto, sin < ni >:\n"
+            "/entrada 2026-09-03 se me olvidó apuntar esto")
         return
 
     fecha = context.args[0]
