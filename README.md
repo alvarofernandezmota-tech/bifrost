@@ -128,6 +128,68 @@ source venv/bin/activate
 python3 bot.py
 ```
 
+## Como servicio
+
+Para que el bot no dependa de una terminal abierta. La unidad está en
+[`systemd/bifrost.service`](systemd/bifrost.service).
+
+**Antes de instalarla**, comprueba que las rutas del fichero coinciden con
+las tuyas. Llevan `varopc` y `~/GitHub/personal/midgaror` escritos dentro:
+
+```bash
+grep -E "User=|WorkingDirectory=|ExecStart=|ReadWritePaths=" systemd/bifrost.service
+```
+
+Instalación:
+
+```bash
+sudo cp systemd/bifrost.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now bifrost
+```
+
+Comprobación:
+
+```bash
+systemctl status bifrost
+journalctl -u bifrost -n 30 --no-pager
+```
+
+En el arranque debe aparecer `Bot en marcha` y, si tienes puesto el chat_id,
+`Autorizacion activa para 1 chat(s)`. Si en su lugar sale el aviso de que
+responde a cualquiera, te falta `TELEGRAM_CHAT_ID` en el `.env`.
+
+### Comandos del día a día
+
+```bash
+sudo systemctl restart bifrost     # tras cambiar código o .env
+sudo systemctl stop bifrost        # pararlo
+journalctl -u bifrost -f           # ver el log en vivo
+```
+
+### Qué hace la unidad
+
+- **Se reinicia solo** si el bot muere: la red se va, Telegram falla. Con un
+  tope de 5 reinicios en 5 minutos, para que un error de configuración no
+  entre en bucle.
+- **El token no pasa por systemd.** Lo sigue leyendo `python-dotenv` del
+  `.env`, así que no aparece en `systemctl show` ni en el volcado de la
+  unidad.
+- **Solo puede escribir en `diario/personal/`.** El resto del disco, incluido
+  el resto del repo, lo ve de solo lectura.
+
+### Cuidado al actualizar
+
+Systemd arranca el bot con el Python del entorno virtual. Si rehaces el
+`venv`, o si Arch sube de versión menor de Python y el entorno se queda
+huérfano, el servicio deja de arrancar. Se ve claro en el log:
+
+```bash
+journalctl -u bifrost -n 20 --no-pager
+```
+
+Se arregla recreando el entorno y reiniciando el servicio.
+
 ## Comandos
 
 | Comando | Descripción |

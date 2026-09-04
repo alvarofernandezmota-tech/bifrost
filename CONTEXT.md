@@ -63,4 +63,5 @@ Bifrost es un bot de Telegram que permite escribir entradas del diario personal 
 ✅ Documentación completa
 ✅ `/entrada` arreglado
 ✅ Autorización por chat_id (`utils/auth.py`)
-⚠️ Pendiente: servicio systemd en Madre
+✅ Unidad de systemd escrita (`systemd/bifrost.service`)
+⚠️ Pendiente: instalarla en Madre y usar el bot 1-2 semanas (fase 2b)
