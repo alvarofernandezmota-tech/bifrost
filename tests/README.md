@@ -32,6 +32,11 @@ pasaban en verde con el bug puesto. Comprobado deshaciendo el arreglo.
 handler nuevo se olvida en esa lista, su prueba falla con un aviso de que el
 fichero está fuera del repo, así que la red no se toca ni por accidente.
 
+`dobles.py` apaga el log con `logging.disable(CRITICAL)`, y eso deja `assertLogs`
+y `assertNoLogs` sin poder decir la verdad: el primero falla siempre y el segundo
+**pasa siempre**, aunque el aviso esté puesto. Una prueba que mire avisos tiene
+que envolverse en `logs_visibles()`, que lo enciende dentro del `with`.
+
 ## Qué se cubre
 
 | Fichero | Qué prueba |
@@ -43,6 +48,7 @@ fichero está fuera del repo, así que la red no se toca ni por accidente.
 | `test_hoy.py` | que junta las cuatro partes, que **no escribe nada** y que el recorte no se come el resto |
 | `test_limites.py` | que ningún comando se pase de los 4096 de Telegram: listas enormes, ecos del texto del usuario y el aviso de comando pegado |
 | `test_menu.py` | que el menú de «/» y los `CommandHandler` no se separen; lee `bot.py` con `ast`, sin arrancar el bot |
+| `test_auth.py` | quién puede darle órdenes al bot: cómo se lee `TELEGRAM_CHAT_ID` y que el aviso de «sin restricción» esté ahí |
 
 ## Lo que estas pruebas NO dicen
 
