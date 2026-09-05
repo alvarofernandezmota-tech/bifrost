@@ -42,8 +42,23 @@ def _instalar_telegram_falso() -> None:
         DEFAULT_TYPE = object
 
     ext.ContextTypes = ContextTypes
-    ext.Application = ext.CommandHandler = ext.MessageHandler = ext.filters = object
+    ext.Application = ext.CommandHandler = ext.MessageHandler = object
+
+    # `filters` era `object`, asi que `filters.Chat` no existia y utils/auth.py
+    # ni siquiera se podia importar en las pruebas. Aqui es un modulo de verdad
+    # con lo unico que usamos: un Chat que se limita a guardar los ids. Lo que
+    # esta en nuestra mano es comprobar que el filtro se construye con los ids
+    # correctos; que Telegram luego lo aplique bien es cosa de la libreria.
+    filtros = types.ModuleType("telegram.ext.filters")
+
+    class Chat:
+        def __init__(self, chat_id):
+            self.chat_id = chat_id
+
+    filtros.Chat = Chat
+    ext.filters = filtros
     sys.modules["telegram"], sys.modules["telegram.ext"] = tg, ext
+    sys.modules["telegram.ext.filters"] = filtros
 
 
 _instalar_telegram_falso()
@@ -57,6 +72,23 @@ for ruta in (str(BIFROST), str(DIARIO), str(DIARIO / "tareas"),
 # traza es la que permitio diagnosticar el bug del 2026-09-05). En las
 # pruebas solo es ruido, y esconde el fallo de verdad entre lineas.
 logging.disable(logging.CRITICAL)
+
+
+@contextlib.contextmanager
+def logs_visibles():
+    """Vuelve a encender el log dentro del `with`.
+
+    Con el `logging.disable` de arriba puesto, un `logger.warning()` no
+    llega a crear ningun registro: `assertNoLogs` pasa siempre aunque el
+    aviso este ahi, y `assertLogs` falla siempre aunque lo este tambien.
+    Las dos comprobaciones mienten, y una de ellas miente en verde. Las
+    pruebas que miran avisos tienen que envolverse en esto.
+    """
+    logging.disable(logging.NOTSET)
+    try:
+        yield
+    finally:
+        logging.disable(logging.CRITICAL)
 
 
 class Entidad:
