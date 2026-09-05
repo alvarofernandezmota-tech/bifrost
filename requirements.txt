@@ -1,0 +1,18 @@
+# Dependencias de bifrost, con la version fijada.
+#
+# Fijadas y no "la ultima": el bot corre en Madre como servicio systemd y se
+# actualiza con un git pull. Sin version fija, un pip install en el momento
+# equivocado trae una version nueva de python-telegram-bot con la API cambiada
+# y el bot deja de arrancar sin que nadie haya tocado el codigo.
+#
+# Estas son las que hay instaladas y funcionando en Madre a dia de hoy
+# (2026-09-06). Para subirlas: cambiar el numero aqui, reinstalar, correr
+# python3 scripts/verificar.py desde midgaror y probar un /hoy de verdad.
+#
+#     venv/bin/pip install -r requirements.txt
+#
+# Solo van las dos que importamos nosotros. Lo demas (httpx, anyio, certifi,
+# h11, httpcore, idna) lo arrastra python-telegram-bot y lo resuelve pip.
+
+python-telegram-bot==22.8
+python-dotenv==1.2.3
