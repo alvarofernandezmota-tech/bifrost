@@ -360,6 +360,24 @@ citas y los hábitos con el suyo. `/hoy` no escribe nada, así que no sube nada.
 `setMyCommands` al arrancar. Un comando nuevo se añade ahí y aparece solo; si
 Telegram no contesta, se registra el fallo y el bot arranca igual.
 
+## Pruebas
+
+```bash
+python3 -m unittest discover -s tests
+```
+
+55 pruebas de los handlers, en menos de un décimo de segundo, sin red y sin
+Telegram instalado: `tests/dobles.py` pone un `telegram` de mentira y un
+diario en un temporal. Detalle en [`tests/README.md`](tests/README.md).
+
+Entre ellas está la que impide que vuelva el bug del 2026-09-05: un texto que
+empieza por `/` **nunca** se escribe en el diario. Y `test_menu.py` comprueba
+que el menú de «/» y los comandos registrados no se separen.
+
+Lo que las pruebas no pueden decir —que Telegram marque un mensaje como
+comando, que lo desplegado sea este código, que el push llegue— sigue
+necesitando probarlo a mano.
+
 **Ninguna lógica vive aquí.** Los handlers traducen el mensaje de Telegram a
 una llamada y la respuesta a texto; lo que decide qué se guarda y cómo está
 en midgaror, con sus pruebas (ADR-009 y la regla de arquitectura de
