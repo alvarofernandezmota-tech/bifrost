@@ -16,6 +16,7 @@ bifrost/
 │ ├─ _init_.py
 │ ├─ diario.py # /diario → organizar_texto()
 │ ├─ entrada.py # /entrada → escribir_entrada()
+│ ├─ secciones.py # /siento, /aprendo, /plan → secciones del diario
 │ ├─ tarea.py # /tarea, /tareas → diario/tareas/tareas.py
 │ ├─ cita.py # /cita, /agenda → diario/agenda/agenda.py
 │ ├─ habito.py # /habito, /habitos → diario/habitos/habitos.py
@@ -305,6 +306,9 @@ ayuda anterior los llevaba y se escribieron tal cual dos veces en el diario.
 | `/help` | Ayuda completa | — |
 | `/diario hoy he dormido fatal` | Añade el texto a la entrada de **hoy** | `diario/organizar_diario.py` |
 | `/entrada 2026-09-03 se me olvidó esto` | Lo mismo en **ese día** | `diario/bifrost_bridge.py` |
+| `/siento contento, he dormido bien` | A **«Cómo me siento»**, con la hora | `diario/organizar_diario.py` |
+| `/aprendo lo de filters.COMMAND` | A **«Avances / aprendizajes»**, como viñeta | idem |
+| `/plan seguir con el portfolio` | A **«Para mañana»**, como viñeta | idem |
 | `/tarea comprar el pan` | Apunta una tarea | `diario/tareas/tareas.py` |
 | `/tarea médico mañana a las 10` | Con fecha: la saca del texto | idem + `diario/fechas.py` |
 | `/tarea empezar 3` · `/tarea hecha 3` · `/tarea reabrir 3` | La mueve de estado | idem |
@@ -324,6 +328,13 @@ ayuda anterior los llevaba y se escribieron tal cual dos veces en el diario.
 Los dos primeros, y el texto suelto, escriben dentro de la sección "Qué ha
 pasado hoy", con la hora delante, sin pisar lo que ya hubiera. Lo único que
 cambia es el día.
+
+**`/siento`, `/aprendo` y `/plan` escriben en las otras tres secciones.** De
+las cuatro de la plantilla, «Qué ha pasado hoy» está rellena el 100 % de los
+días y las otras entre el 30 y el 40 %: la diferencia es que en la primera
+escribe el bot y en las otras había que abrir un editor. Con esto la entrada
+del día se relee entera —qué hiciste, cómo estabas, qué aprendiste y qué
+queda— en vez de todo amontonado en un solo apartado.
 
 **Escribir sin comando es lo normal.** El handler de texto libre se registra
 el último, así que los comandos mandan. Sin él, mandar «hoy he dormido fatal»

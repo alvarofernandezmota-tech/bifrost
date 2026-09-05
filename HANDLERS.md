@@ -48,6 +48,30 @@ es lo que pasó el 2026-09-05 treinta veces seguidas.
 
 ---
 
+## `/siento`, `/aprendo` y `/plan`
+
+**Módulo**: `handlers/secciones.py` → `organizar_texto(..., seccion=...)` de
+`midgaror/diario/organizar_diario.py`
+
+| Mensaje | Va a | Cómo se ve |
+|---|---|---|
+| `/siento contento, he dormido bien` | `## Cómo me siento` | con la hora delante |
+| `/aprendo lo de filters.COMMAND` | `## Avances / aprendizajes` | como viñeta |
+| `/plan seguir con el portfolio` | `## Para mañana` | como viñeta |
+
+**Por qué existen.** De las cuatro secciones de la plantilla, «Qué ha pasado
+hoy» está rellena el 100 % de los días y las otras tres entre el 30 y el
+40 %. La diferencia no es la disciplina: es que en la primera escribe el bot
+y en las otras hay que abrir un editor (ADR-012, apartado 5).
+
+**Por qué `/plan` y no `/mañana`.** Los comandos de Telegram solo admiten
+`a-z`, `0-9` y `_`: con eñe no llegan marcados como comando.
+
+La hora o la viñeta no las decide este handler: están en
+`organizar_diario.SECCIONES`, con el resto de la lógica.
+
+---
+
 ## `/tarea` y `/tareas`
 
 **Módulo**: `handlers/tarea.py` → `midgaror/diario/tareas/tareas.py`
