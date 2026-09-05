@@ -3,6 +3,7 @@
 Interfaz de midgaror/diario/habitos/habitos.py, igual que /tarea con tareas.
 """
 
+import asyncio
 import logging
 import sys
 from pathlib import Path
@@ -52,7 +53,12 @@ async def comando_habito(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     fecha = resto[0] if resto else None
     try:
         fecha, nombre, marca = habitos.marcar(nombre, hecho=hecho, fecha=fecha, valor=valor)
-        subido = breve(sincronizar(habitos.RUTA_DATOS, "diario: hábitos desde bifrost"))
+        # sincronizar() hace git commit y git push: hasta 90 s con mala red.
+        # Dentro de una corrutina eso congela el bot entero para todos los
+        # chats, no solo para quien mando el mensaje. to_thread lo saca del
+        # hilo del bucle de eventos, que sigue atendiendo lo demas.
+        subido = breve(await asyncio.to_thread(
+            sincronizar, habitos.RUTA_DATOS, "diario: hábitos desde bifrost"))
         await responder(update, f"{habitos.formato(marca)} {nombre} — {fecha} · {subido}")
     except ValueError as e:
         await responder(update, f"⚠️ {e}")

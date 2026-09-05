@@ -10,6 +10,14 @@ escribir), cualquier otra excepción → log completo y `❌ Error:` (fallo
 nuestro). Lo que escribe sube con `sincronizar()`, y la confirmación se acorta
 con `utils/respuestas.breve()`.
 
+Esa subida va **siempre** por `await asyncio.to_thread(sincronizar, …)`, nunca
+llamando a `sincronizar()` a pelo. `sincronizar()` hace `git commit` y
+`git push`, que con mala red tarda hasta 90 segundos, y es código síncrono: si
+se llama dentro de una corrutina bloquea el bucle de eventos entero, es decir,
+el bot deja de responder **a todos los chats** mientras dura, no solo a quien
+mandó el mensaje. `to_thread` lo saca a un hilo aparte y el bucle sigue
+atendiendo lo demás. Un handler nuevo que escriba algo tiene que hacerlo igual.
+
 ---
 
 ## `/diario <texto>`

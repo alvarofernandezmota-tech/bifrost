@@ -5,6 +5,7 @@ midgaror/diario/agenda/agenda.py y aquí solo se traduce el mensaje de
 Telegram a una llamada y la respuesta a texto.
 """
 
+import asyncio
 import logging
 import sys
 from pathlib import Path
@@ -35,8 +36,13 @@ AYUDA = (
 )
 
 
-def _subir() -> str:
-    return breve(sincronizar(agenda.RUTA_DATOS, "diario: citas desde bifrost"))
+async def _subir() -> str:
+    # sincronizar() hace git commit y git push: hasta 90 s con mala red.
+    # Dentro de una corrutina eso congela el bot entero para todos los
+    # chats, no solo para quien mando el mensaje. to_thread lo saca del
+    # hilo del bucle de eventos, que sigue atendiendo lo demas.
+    return breve(await asyncio.to_thread(
+        sincronizar, agenda.RUTA_DATOS, "diario: citas desde bifrost"))
 
 
 def _confirmacion(cita: dict, solapan: list[dict], subido: str) -> str:
@@ -61,17 +67,18 @@ async def comando_cita(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             id_cita = int(args[1])
             if args[0] == "cancelar":
                 cita = agenda.cancelar(id_cita)
+                subido = await _subir()
                 await responder(update, 
-                    f"🗑️ [{cita['id']}] {cita['texto']} · {cita['fecha']} · {_subir()}")
+                    f"🗑️ [{cita['id']}] {cita['texto']} · {cita['fecha']} · {subido}")
                 return
             if len(args) < 3:
                 await responder(update, f"❌ Falta el cuándo.\n\n{AYUDA}")
                 return
             cita, solapan = agenda.mover(id_cita, " ".join(args[2:]))
-            await responder(update, _confirmacion(cita, solapan, _subir()))
+            await responder(update, _confirmacion(cita, solapan, await _subir()))
             return
         cita, solapan = agenda.agregar(" ".join(args))
-        await responder(update, _confirmacion(cita, solapan, _subir()))
+        await responder(update, _confirmacion(cita, solapan, await _subir()))
     except ValueError as e:
         await responder(update, f"⚠️ {e}")
     except Exception as e:

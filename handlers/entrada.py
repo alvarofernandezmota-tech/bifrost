@@ -1,5 +1,6 @@
 """Handler para el comando /entrada."""
 
+import asyncio
 import logging
 import re
 import sys
@@ -42,7 +43,12 @@ async def comando_entrada(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     try:
         ruta = escribir_entrada(texto, fecha)
-        await responder(update, f"📔 Apuntado en el diario del {fecha} · {breve(sincronizar(ruta))}")
+        # sincronizar() hace git commit y git push: hasta 90 s con mala red.
+        # Dentro de una corrutina eso congela el bot entero para todos los
+        # chats, no solo para quien mando el mensaje. to_thread lo saca del
+        # hilo del bucle de eventos, que sigue atendiendo lo demas.
+        subido = breve(await asyncio.to_thread(sincronizar, ruta))
+        await responder(update, f"📔 Apuntado en el diario del {fecha} · {subido}")
     except Exception as e:
         logger.exception("Error escribiendo la entrada del %s", fecha)
         await responder(update, f"❌ Error: {e}")
