@@ -24,7 +24,7 @@ sys.path.insert(0, str(DIARIO))
 from organizar_diario import organizar_texto  # noqa: E402 (requiere sys.path previo)
 from sincronizar import sincronizar  # noqa: E402 (requiere sys.path previo)
 
-from utils.respuestas import breve  # noqa: E402 (coherencia con el resto de handlers)
+from utils.respuestas import breve, responder  # noqa: E402 (requiere sys.path previo)
 
 logger = logging.getLogger(__name__)
 
@@ -43,17 +43,17 @@ async def _escribir(update: Update, context: ContextTypes.DEFAULT_TYPE, comando:
     seccion, confirmacion, ejemplo = DESTINOS[comando]
     texto = " ".join(context.args)
     if not texto.strip():
-        await update.message.reply_text(
+        await responder(update, 
             f"❌ Escribe el texto detrás del comando, sin < ni >:\n{ejemplo}")
         return
     try:
         ruta = organizar_texto(texto, seccion=seccion)
-        await update.message.reply_text(f"{confirmacion} · {breve(sincronizar(ruta))}")
+        await responder(update, f"{confirmacion} · {breve(sincronizar(ruta))}")
     except ValueError as e:
-        await update.message.reply_text(f"⚠️ {e}")
+        await responder(update, f"⚠️ {e}")
     except Exception as e:
         logger.exception("Error escribiendo en la sección %s", seccion)
-        await update.message.reply_text(f"❌ Error: {e}")
+        await responder(update, f"❌ Error: {e}")
 
 
 async def comando_siento(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

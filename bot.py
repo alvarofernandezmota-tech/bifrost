@@ -17,6 +17,7 @@ from handlers.secciones import comando_aprendo, comando_plan, comando_siento
 from handlers.tarea import comando_tarea, comando_tareas
 from handlers.texto import mensaje_libre
 from utils.auth import filtro_autorizado
+from utils.respuestas import responder
 
 # Cargar variables de entorno
 load_dotenv()
@@ -72,7 +73,7 @@ async def registrar_menu(app: Application) -> None:
 
 async def comando_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Comando /start - Mensaje de bienvenida."""
-    await update.message.reply_text(
+    await responder(update, 
         "👋 ¡Hola! Soy Bifrost.\n\n"
         "Escríbeme el día según pasa:\n"
         "/diario hoy he dormido fatal\n"
@@ -88,7 +89,7 @@ async def comando_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
 async def comando_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Comando /help - Muestra ayuda."""
-    await update.message.reply_text(
+    await responder(update, 
         "📖 Ayuda de Bifrost\n\n"
         "Los ejemplos son literales: escribe lo que ves, sin < ni >.\n\n"
         "DIARIO\n"

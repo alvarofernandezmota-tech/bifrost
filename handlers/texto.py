@@ -27,7 +27,7 @@ sys.path.insert(0, str(DIARIO))
 from organizar_diario import organizar_texto  # noqa: E402 (requiere sys.path previo)
 from sincronizar import sincronizar  # noqa: E402 (requiere sys.path previo)
 
-from utils.respuestas import breve  # noqa: E402 (coherencia con el resto de handlers)
+from utils.respuestas import breve, responder  # noqa: E402 (requiere sys.path previo)
 
 logger = logging.getLogger(__name__)
 
@@ -53,11 +53,11 @@ async def mensaje_libre(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         # para poder reenviarlo sin volver a escribirlo.
         logger.warning("Texto que parece comando y no lo es (entidades: %s): %r",
                        [e.type for e in (update.message.entities or [])], texto[:80])
-        await update.message.reply_text(AVISO_COMANDO.format(texto=texto))
+        await responder(update, AVISO_COMANDO.format(texto=texto))
         return
     try:
         ruta = organizar_texto(texto)
-        await update.message.reply_text(f"📔 Apuntado en el diario de hoy · {breve(sincronizar(ruta))}")
+        await responder(update, f"📔 Apuntado en el diario de hoy · {breve(sincronizar(ruta))}")
     except Exception as e:
         logger.exception("Error escribiendo un mensaje suelto en el diario")
-        await update.message.reply_text(f"❌ Error: {e}")
+        await responder(update, f"❌ Error: {e}")

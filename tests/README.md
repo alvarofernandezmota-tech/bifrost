@@ -23,6 +23,11 @@ No se usa el `python-telegram-bot` de verdad a propósito:
   como mandar un mensaje que empieza por `/` sin marcarlo como
   `bot_command`. Eso es exactamente lo que rompió el bot el 2026-09-05.
 
+`Mensaje.reply_text` **levanta `DemasiadoLargo` cuando el texto pasa de 4096
+unidades UTF-16**, igual que Telegram. Sin eso, las pruebas de tamaño serían
+tautológicas: `❌ Error: Message is too long` también cabe en 4096, así que
+pasaban en verde con el bug puesto. Comprobado deshaciendo el arreglo.
+
 `sincronizar()` también se sustituye: haría `git commit` y `git push`. Si un
 handler nuevo se olvida en esa lista, su prueba falla con un aviso de que el
 fichero está fuera del repo, así que la red no se toca ni por accidente.
@@ -36,6 +41,7 @@ fichero está fuera del repo, así que la red no se toca ni por accidente.
 | `test_habito.py` | sí/no, valor del 1 al 10, otra fecha, y que el número y el sí/no conviven en los totales |
 | `test_diario.py` | que cada comando escribe **en su sección y solo en la suya**, y que el texto libre **no se traga comandos** |
 | `test_hoy.py` | que junta las cuatro partes, que **no escribe nada** y que el recorte no se come el resto |
+| `test_limites.py` | que ningún comando se pase de los 4096 de Telegram: listas enormes, ecos del texto del usuario y el aviso de comando pegado |
 | `test_menu.py` | que el menú de «/» y los `CommandHandler` no se separen; lee `bot.py` con `ast`, sin arrancar el bot |
 
 ## Lo que estas pruebas NO dicen

@@ -19,7 +19,7 @@ sys.path.insert(0, str(DIARIO / "habitos"))
 import habitos  # noqa: E402 (requiere sys.path previo)
 from sincronizar import sincronizar  # noqa: E402 (requiere sys.path previo)
 
-from utils.respuestas import breve  # noqa: E402 (coherencia con el resto de handlers)
+from utils.respuestas import breve, responder  # noqa: E402 (requiere sys.path previo)
 
 logger = logging.getLogger(__name__)
 
@@ -38,13 +38,13 @@ async def comando_habito(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     """/habito [no] <nombre> [valor 1-10] [AAAA-MM-DD]"""
     args = list(context.args)
     if not args:
-        await update.message.reply_text(AYUDA)
+        await responder(update, AYUDA)
         return
     hecho = True
     if args[0] == "no":
         hecho, args = False, args[1:]
     if not args:
-        await update.message.reply_text(AYUDA)
+        await responder(update, AYUDA)
         return
     # /habito energia 7 [fecha]: el valor es un número suelto detrás del nombre.
     nombre, resto = args[0], args[1:]
@@ -53,12 +53,12 @@ async def comando_habito(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     try:
         fecha, nombre, marca = habitos.marcar(nombre, hecho=hecho, fecha=fecha, valor=valor)
         subido = breve(sincronizar(habitos.RUTA_DATOS, "diario: hábitos desde bifrost"))
-        await update.message.reply_text(f"{habitos.formato(marca)} {nombre} — {fecha} · {subido}")
+        await responder(update, f"{habitos.formato(marca)} {nombre} — {fecha} · {subido}")
     except ValueError as e:
-        await update.message.reply_text(f"⚠️ {e}")
+        await responder(update, f"⚠️ {e}")
     except Exception as e:
         logger.exception("Error en /habito")
-        await update.message.reply_text(f"❌ Error: {e}")
+        await responder(update, f"❌ Error: {e}")
 
 
 async def comando_habitos(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -69,9 +69,9 @@ async def comando_habitos(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             texto = habitos.resumen_semana(args[1] if len(args) > 1 else None)
         else:
             texto = habitos.resumen_dia(args[0] if args else None)
-        await update.message.reply_text(texto)
+        await responder(update, texto)
     except ValueError as e:
-        await update.message.reply_text(f"⚠️ {e}")
+        await responder(update, f"⚠️ {e}")
     except Exception as e:
         logger.exception("Error en /habitos")
-        await update.message.reply_text(f"❌ Error: {e}")
+        await responder(update, f"❌ Error: {e}")

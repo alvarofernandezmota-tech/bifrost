@@ -21,7 +21,7 @@ sys.path.insert(0, str(DIARIO / "agenda"))
 import agenda  # noqa: E402 (requiere sys.path previo)
 from sincronizar import sincronizar  # noqa: E402 (requiere sys.path previo)
 
-from utils.respuestas import breve  # noqa: E402 (coherencia con el resto de handlers)
+from utils.respuestas import breve, responder  # noqa: E402 (requiere sys.path previo)
 
 logger = logging.getLogger(__name__)
 
@@ -51,32 +51,32 @@ async def comando_cita(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     """/cita <texto con cuándo> | /cita mover <id> <cuándo> | /cita cancelar <id>"""
     args = context.args
     if not args:
-        await update.message.reply_text(AYUDA)
+        await responder(update, AYUDA)
         return
     try:
         if args[0] in ("mover", "cancelar"):
             if len(args) < 2 or not args[1].isdigit():
-                await update.message.reply_text(f"❌ Falta el número de la cita.\n\n{AYUDA}")
+                await responder(update, f"❌ Falta el número de la cita.\n\n{AYUDA}")
                 return
             id_cita = int(args[1])
             if args[0] == "cancelar":
                 cita = agenda.cancelar(id_cita)
-                await update.message.reply_text(
+                await responder(update, 
                     f"🗑️ [{cita['id']}] {cita['texto']} · {cita['fecha']} · {_subir()}")
                 return
             if len(args) < 3:
-                await update.message.reply_text(f"❌ Falta el cuándo.\n\n{AYUDA}")
+                await responder(update, f"❌ Falta el cuándo.\n\n{AYUDA}")
                 return
             cita, solapan = agenda.mover(id_cita, " ".join(args[2:]))
-            await update.message.reply_text(_confirmacion(cita, solapan, _subir()))
+            await responder(update, _confirmacion(cita, solapan, _subir()))
             return
         cita, solapan = agenda.agregar(" ".join(args))
-        await update.message.reply_text(_confirmacion(cita, solapan, _subir()))
+        await responder(update, _confirmacion(cita, solapan, _subir()))
     except ValueError as e:
-        await update.message.reply_text(f"⚠️ {e}")
+        await responder(update, f"⚠️ {e}")
     except Exception as e:
         logger.exception("Error en /cita")
-        await update.message.reply_text(f"❌ Error: {e}")
+        await responder(update, f"❌ Error: {e}")
 
 
 async def comando_agenda(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -86,10 +86,10 @@ async def comando_agenda(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     if semana:
         args = args[1:]
     try:
-        await update.message.reply_text(
+        await responder(update, 
             agenda.resumen(args[0] if args else None, semana=semana))
     except ValueError as e:
-        await update.message.reply_text(f"⚠️ {e}")
+        await responder(update, f"⚠️ {e}")
     except Exception as e:
         logger.exception("Error en /agenda")
-        await update.message.reply_text(f"❌ Error: {e}")
+        await responder(update, f"❌ Error: {e}")
