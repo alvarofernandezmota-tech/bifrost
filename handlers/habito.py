@@ -19,6 +19,8 @@ sys.path.insert(0, str(DIARIO / "habitos"))
 import habitos  # noqa: E402 (requiere sys.path previo)
 from sincronizar import sincronizar  # noqa: E402 (requiere sys.path previo)
 
+from utils.respuestas import breve  # noqa: E402 (coherencia con el resto de handlers)
+
 logger = logging.getLogger(__name__)
 
 AYUDA = (
@@ -46,8 +48,8 @@ async def comando_habito(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     nombre, fecha = args[0], (args[1] if len(args) > 1 else None)
     try:
         fecha, nombre, hecho = habitos.marcar(nombre, hecho=hecho, fecha=fecha)
-        subido = sincronizar(habitos.RUTA_DATOS, "diario: hábitos desde bifrost")
-        await update.message.reply_text(f"{'✅' if hecho else '❌'} {nombre} — {fecha}\n{subido}")
+        subido = breve(sincronizar(habitos.RUTA_DATOS, "diario: hábitos desde bifrost"))
+        await update.message.reply_text(f"{'✅' if hecho else '❌'} {nombre} — {fecha} · {subido}")
     except ValueError as e:
         await update.message.reply_text(f"⚠️ {e}")
     except Exception as e:

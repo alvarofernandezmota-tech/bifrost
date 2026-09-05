@@ -16,6 +16,8 @@ sys.path.insert(0, str(DIARIO))
 from bifrost_bridge import escribir_entrada  # noqa: E402 (requiere sys.path previo)
 from sincronizar import sincronizar  # noqa: E402 (requiere sys.path previo)
 
+from utils.respuestas import breve  # noqa: E402 (coherencia con el resto de handlers)
+
 logger = logging.getLogger(__name__)
 
 FECHA_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -40,7 +42,7 @@ async def comando_entrada(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     try:
         ruta = escribir_entrada(texto, fecha)
-        await update.message.reply_text(f"✅ {sincronizar(ruta)}\n{ruta}")
+        await update.message.reply_text(f"📔 Apuntado en el diario del {fecha} · {breve(sincronizar(ruta))}")
     except Exception as e:
         logger.exception("Error escribiendo la entrada del %s", fecha)
         await update.message.reply_text(f"❌ Error: {e}")
