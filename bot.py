@@ -13,6 +13,7 @@ from handlers.diario import comando_diario
 from handlers.entrada import comando_entrada
 from handlers.habito import comando_habito, comando_habitos
 from handlers.hoy import comando_hoy
+from handlers.secciones import comando_aprendo, comando_plan, comando_siento
 from handlers.tarea import comando_tarea, comando_tareas
 from handlers.texto import mensaje_libre
 from utils.auth import filtro_autorizado
@@ -42,6 +43,9 @@ logger = logging.getLogger(__name__)
 MENU = [
     ("hoy", "El día de un vistazo"),
     ("diario", "Apunta algo en el diario de hoy"),
+    ("siento", "Cómo te sientes ahora mismo"),
+    ("aprendo", "Algo que has aprendido o avanzado"),
+    ("plan", "Algo para mañana"),
     ("entrada", "Apunta algo en otro día: /entrada 2026-09-03 texto"),
     ("tarea", "Apunta o cambia una tarea"),
     ("tareas", "Tus tareas abiertas"),
@@ -72,6 +76,7 @@ async def comando_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         "👋 ¡Hola! Soy Bifrost.\n\n"
         "Escríbeme el día según pasa:\n"
         "/diario hoy he dormido fatal\n"
+        "/siento contento, he dormido bien\n"
         "/tarea comprar el pan\n"
         "/cita médico mañana a las 10\n"
         "/habito deporte\n"
@@ -91,6 +96,12 @@ async def comando_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "   añade el texto a «Qué ha pasado hoy», con la hora delante\n"
         "/entrada 2026-09-03 se me olvidó apuntar esto\n"
         "   lo mismo, en el día que digas (AAAA-MM-DD)\n\n"
+        "CADA COSA EN SU SECCIÓN\n"
+        "La entrada del día tiene cuatro apartados. Estos escriben en los\n"
+        "otros tres, para que el día se relea entero y no todo amontonado:\n"
+        "/siento hoy estoy contento, he dormido bien   → Cómo me siento\n"
+        "/aprendo lo de filters.COMMAND de Telegram    → Avances / aprendizajes\n"
+        "/plan seguir con el portfolio                 → Para mañana\n\n"
         "TAREAS\n"
         "/tarea comprar el pan     apunta una tarea\n"
         "/tarea médico mañana a las 10  con fecha: la saca del texto\n"
@@ -144,6 +155,9 @@ def main() -> None:
     app.add_handler(CommandHandler("help", comando_help, filters=autorizado))
     app.add_handler(CommandHandler("diario", comando_diario, filters=autorizado))
     app.add_handler(CommandHandler("entrada", comando_entrada, filters=autorizado))
+    app.add_handler(CommandHandler("siento", comando_siento, filters=autorizado))
+    app.add_handler(CommandHandler("aprendo", comando_aprendo, filters=autorizado))
+    app.add_handler(CommandHandler("plan", comando_plan, filters=autorizado))
     app.add_handler(CommandHandler("tarea", comando_tarea, filters=autorizado))
     app.add_handler(CommandHandler("tareas", comando_tareas, filters=autorizado))
     app.add_handler(CommandHandler("cita", comando_cita, filters=autorizado))
