@@ -27,6 +27,7 @@ AYUDA = (
     "❌ Uso:\n"
     "/habito deporte — apúntalo como hecho hoy\n"
     "/habito no meditar — apúntalo como no hecho\n"
+    "/habito energia 7 — apunta un valor del 1 al 10\n"
     "/habito deporte 2026-09-03 — en otro día\n"
     "/habitos — los de hoy\n"
     "/habitos semana — la semana"
@@ -34,7 +35,7 @@ AYUDA = (
 
 
 async def comando_habito(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """/habito [no] <nombre> [AAAA-MM-DD]"""
+    """/habito [no] <nombre> [valor 1-10] [AAAA-MM-DD]"""
     args = list(context.args)
     if not args:
         await update.message.reply_text(AYUDA)
@@ -45,11 +46,14 @@ async def comando_habito(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     if not args:
         await update.message.reply_text(AYUDA)
         return
-    nombre, fecha = args[0], (args[1] if len(args) > 1 else None)
+    # /habito energia 7 [fecha]: el valor es un número suelto detrás del nombre.
+    nombre, resto = args[0], args[1:]
+    valor = resto.pop(0) if resto and resto[0].isdigit() else None
+    fecha = resto[0] if resto else None
     try:
-        fecha, nombre, hecho = habitos.marcar(nombre, hecho=hecho, fecha=fecha)
+        fecha, nombre, marca = habitos.marcar(nombre, hecho=hecho, fecha=fecha, valor=valor)
         subido = breve(sincronizar(habitos.RUTA_DATOS, "diario: hábitos desde bifrost"))
-        await update.message.reply_text(f"{'✅' if hecho else '❌'} {nombre} — {fecha} · {subido}")
+        await update.message.reply_text(f"{habitos.formato(marca)} {nombre} — {fecha} · {subido}")
     except ValueError as e:
         await update.message.reply_text(f"⚠️ {e}")
     except Exception as e:

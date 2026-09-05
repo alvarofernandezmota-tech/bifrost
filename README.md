@@ -17,8 +17,9 @@ bifrost/
 │ ├─ diario.py # /diario → organizar_texto()
 │ ├─ entrada.py # /entrada → escribir_entrada()
 │ ├─ tarea.py # /tarea, /tareas → diario/tareas/tareas.py
+│ ├─ cita.py # /cita, /agenda → diario/agenda/agenda.py
 │ ├─ habito.py # /habito, /habitos → diario/habitos/habitos.py
-│ ├─ hoy.py # /hoy → leer_entrada + tareas + hábitos
+│ ├─ hoy.py # /hoy → leer_entrada + citas + tareas + hábitos
 │ └─ texto.py # mensaje sin comando → diario de hoy
 ├─ utils/
 │ ├─ auth.py # autorización por chat_id
@@ -293,17 +294,24 @@ ayuda anterior los llevaba y se escribieron tal cual dos veces en el diario.
 
 | Comando | Qué hace | Lógica en midgaror |
 |---------|----------|--------------------|
-| `/start` | Bienvenida con los cuatro comandos del día a día | — |
+| `/start` | Bienvenida con los comandos del día a día | — |
 | `/help` | Ayuda completa | — |
 | `/diario hoy he dormido fatal` | Añade el texto a la entrada de **hoy** | `diario/organizar_diario.py` |
 | `/entrada 2026-09-03 se me olvidó esto` | Lo mismo en **ese día** | `diario/bifrost_bridge.py` |
 | `/tarea comprar el pan` | Apunta una tarea | `diario/tareas/tareas.py` |
-| `/tarea hecha 3` · `/tarea borrar 3` | La cierra o la retira | idem |
-| `/tareas` | Pendientes y últimas hechas | idem |
+| `/tarea médico mañana a las 10` | Con fecha: la saca del texto | idem + `diario/fechas.py` |
+| `/tarea empezar 3` · `/tarea hecha 3` · `/tarea reabrir 3` | La mueve de estado | idem |
+| `/tarea editar 3 …` · `/tarea aplazar 3 …` | Le cambia el texto o la fecha | idem |
+| `/tarea borrar 3` | La retira | idem |
+| `/tareas` | En proceso, pendientes por fecha y últimas hechas | idem |
+| `/cita médico mañana a las 10` | Apunta una cita; avisa si choca con otra | `diario/agenda/agenda.py` |
+| `/cita mover 3 …` · `/cita cancelar 3` | La cambia de hora o la retira | idem |
+| `/agenda` · `/agenda semana` | Las citas del día o de los siete días | idem |
 | `/habito deporte` · `/habito no meditar` | Apunta un hábito de hoy | `diario/habitos/habitos.py` |
+| `/habito energia 7` | Un valor del 1 al 10 | idem |
 | `/habito deporte 2026-09-03` | En otro día | idem |
-| `/habitos` · `/habitos semana` | El día, o la semana con totales | idem |
-| `/hoy` · `/hoy 2026-09-03` | Diario, tareas y hábitos juntos. **Solo lee** | `leer_entrada` + los dos módulos |
+| `/habitos` · `/habitos semana` | El día, o la semana con totales y medias | idem |
+| `/hoy` · `/hoy 2026-09-03` | Diario, citas, tareas y hábitos juntos. **Solo lee** | `leer_entrada` + los tres módulos |
 | *(cualquier texto sin comando)* | Se apunta en el diario de hoy, igual que `/diario` | `diario/organizar_diario.py` |
 
 Los dos primeros, y el texto suelto, escriben dentro de la sección "Qué ha
@@ -321,8 +329,12 @@ disco de Madre, que servía para depurar y en el móvil solo estorba. Los
 avisos sí salen enteros: si el push falla, hay que leerlo.
 
 Todo lo que escribe cualquier comando se commitea y se sube con
-`diario/sincronizar.py`: el diario con su mensaje de siempre, las tareas y
-los hábitos con el suyo. `/hoy` no escribe nada, así que no sube nada.
+`diario/sincronizar.py`: el diario con su mensaje de siempre, las tareas, las
+citas y los hábitos con el suyo. `/hoy` no escribe nada, así que no sube nada.
+
+**El menú de «/»** sale de la lista `MENU` de `bot.py`, publicada con
+`setMyCommands` al arrancar. Un comando nuevo se añade ahí y aparece solo; si
+Telegram no contesta, se registra el fallo y el bot arranca igual.
 
 **Ninguna lógica vive aquí.** Los handlers traducen el mensaje de Telegram a
 una llamada y la respuesta a texto; lo que decide qué se guarda y cómo está

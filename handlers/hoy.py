@@ -1,8 +1,9 @@
 """Handler de /hoy: el día de un vistazo, sin escribir nada.
 
 Junta lo que ya saben decir los módulos de midgaror: la entrada del diario
-(`leer_entrada`), las tareas pendientes y los hábitos apuntados. Leer nunca
-escribe: si no hay entrada del día, lo dice en vez de crearla.
+(`leer_entrada`), las citas del día, las tareas pendientes y los hábitos
+apuntados. Leer nunca escribe: si no hay entrada del día, lo dice en vez de
+crearla.
 """
 
 import logging
@@ -18,7 +19,9 @@ DIARIO = MIDGAROR / "diario"
 sys.path.insert(0, str(DIARIO))
 sys.path.insert(0, str(DIARIO / "tareas"))
 sys.path.insert(0, str(DIARIO / "habitos"))
+sys.path.insert(0, str(DIARIO / "agenda"))
 
+import agenda  # noqa: E402 (requiere sys.path previo)
 import habitos  # noqa: E402 (requiere sys.path previo)
 import tareas  # noqa: E402 (requiere sys.path previo)
 from bifrost_bridge import leer_entrada  # noqa: E402 (requiere sys.path previo)
@@ -31,7 +34,7 @@ TOPE_DIARIO = 2500
 
 
 async def comando_hoy(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """/hoy [AAAA-MM-DD] — diario, tareas pendientes y hábitos de ese día."""
+    """/hoy [AAAA-MM-DD] — diario, citas, tareas y hábitos de ese día."""
     fecha = context.args[0] if context.args else None
     try:
         diario = leer_entrada(fecha)
@@ -39,7 +42,8 @@ async def comando_hoy(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
             diario = diario[:TOPE_DIARIO].rstrip() + "\n…(recortado)"
         partes = [
             "📔 Diario\n" + diario,
-            "\n📋 Tareas\n" + tareas.resumen(),
+            "\n📅 Citas\n" + agenda.resumen(fecha),
+            "\n📋 Tareas\n" + tareas.resumen(hoy=fecha),
             "\n🔁 Hábitos\n" + habitos.resumen_dia(fecha),
         ]
         await update.message.reply_text("\n".join(partes))
