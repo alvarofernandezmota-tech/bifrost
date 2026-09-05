@@ -15,6 +15,10 @@ instalado**, y no tocan ni el diario ni git.
 de que se importe ningún handler, y `CasoBot` deja cada prueba con el diario
 y los tres JSON vacíos en un directorio temporal.
 
+Las rutas a `midgaror/diario/` **no se calculan aquí**: salen de
+`utils/midgaror.py`, el mismo camino que usa el bot de verdad. Antes estaban
+repetidas en este fichero y en los ocho handlers.
+
 No se usa el `python-telegram-bot` de verdad a propósito:
 
 - Lo que hay que probar es **nuestro** código, no el de la librería.

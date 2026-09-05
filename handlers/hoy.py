@@ -7,26 +7,17 @@ crearla.
 """
 
 import logging
-import sys
-from pathlib import Path
 
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from utils.respuestas import responder  # noqa: E402 (requiere sys.path previo)
+from utils.midgaror import modulo
+from utils.respuestas import responder
 
-# Ruta a midgaror/diario/ (4 niveles arriba desde handlers/)
-MIDGAROR = Path(__file__).resolve().parent.parent.parent.parent
-DIARIO = MIDGAROR / "diario"
-sys.path.insert(0, str(DIARIO))
-sys.path.insert(0, str(DIARIO / "tareas"))
-sys.path.insert(0, str(DIARIO / "habitos"))
-sys.path.insert(0, str(DIARIO / "agenda"))
-
-import agenda  # noqa: E402 (requiere sys.path previo)
-import habitos  # noqa: E402 (requiere sys.path previo)
-import tareas  # noqa: E402 (requiere sys.path previo)
-from bifrost_bridge import leer_entrada  # noqa: E402 (requiere sys.path previo)
+agenda = modulo("agenda")
+habitos = modulo("habitos")
+tareas = modulo("tareas")
+leer_entrada = modulo("bifrost_bridge").leer_entrada
 
 logger = logging.getLogger(__name__)
 

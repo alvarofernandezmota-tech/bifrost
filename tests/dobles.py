@@ -24,8 +24,13 @@ import unittest
 from pathlib import Path
 
 BIFROST = Path(__file__).resolve().parent.parent
-MIDGAROR = BIFROST.parent.parent
-DIARIO = MIDGAROR / "diario"
+if str(BIFROST) not in sys.path:
+    sys.path.insert(0, str(BIFROST))
+
+# De aquí sale DIARIO y, al importarlo, las rutas de los módulos de midgaror.
+# Antes esto estaba repetido aquí y en los ocho handlers; ahora lo pone
+# utils/midgaror.py, y las pruebas usan el mismo camino que el bot de verdad.
+from utils.midgaror import DIARIO  # noqa: E402 (necesita BIFROST en sys.path)
 
 
 def _instalar_telegram_falso() -> None:
@@ -62,10 +67,6 @@ def _instalar_telegram_falso() -> None:
 
 
 _instalar_telegram_falso()
-for ruta in (str(BIFROST), str(DIARIO), str(DIARIO / "tareas"),
-             str(DIARIO / "agenda"), str(DIARIO / "habitos")):
-    if ruta not in sys.path:
-        sys.path.insert(0, ruta)
 
 
 # El codigo de produccion escribe en el log y en stdout a proposito (esa
