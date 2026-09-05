@@ -118,11 +118,27 @@ dos cosas a la misma hora pasan, y quien decide es Álvaro.
 | Mensaje | Qué hace |
 |---|---|
 | `/habito deporte` · `/habito no meditar` | hecho o no hecho hoy |
+| `/habito Leer Libro` | el nombre puede llevar espacios |
 | `/habito energia 7` | un valor del 1 al 10 en vez del sí o no |
 | `/habito deporte 2026-09-03` | en otro día |
+| `/habito Beber agua 3 2026-09-03` | nombre compuesto, valor y fecha a la vez |
 | `/habitos` · `/habitos semana` | el día, o la semana con totales y medias |
 
-El número va suelto detrás del nombre; la fecha, detrás del número.
+El final del mensaje se lee **por descarte**, y en este orden: el último
+argumento es la fecha solo si tiene forma `AAAA-MM-DD`; el siguiente por la
+cola es el valor solo si es un entero **y queda algo detrás para el nombre**;
+todo lo que sobra es el nombre, unido con espacios.
+
+Tiene que ser por descarte porque el nombre puede llevar espacios y Telegram
+entrega los argumentos ya partidos: no hay manera de saber dónde acaba el
+nombre si no es mirando qué forma tiene lo que viene después. Leer siempre el
+último argumento como fecha es lo que hacía que `/habito Leer Libro` muriera
+con «fecha no válida: 'Libro'».
+
+El efecto secundario, a propósito: una fecha mal escrita que no tenga forma de
+fecha (`/habito deporte ayer`) ya no da error, se convierte en parte del
+nombre (`deporte-ayer`). Es el precio de admitir nombres de varias palabras, y
+sale barato: el hábito raro se ve en `/habitos` del mismo día.
 
 ---
 

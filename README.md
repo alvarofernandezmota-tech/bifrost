@@ -319,8 +319,10 @@ ayuda anterior los llevaba y se escribieron tal cual dos veces en el diario.
 | `/cita mover 3 …` · `/cita cancelar 3` | La cambia de hora o la retira | idem |
 | `/agenda` · `/agenda semana` | Las citas del día o de los siete días | idem |
 | `/habito deporte` · `/habito no meditar` | Apunta un hábito de hoy | `diario/habitos/habitos.py` |
+| `/habito Leer Libro` | El nombre puede llevar espacios | idem |
 | `/habito energia 7` | Un valor del 1 al 10 | idem |
 | `/habito deporte 2026-09-03` | En otro día | idem |
+| `/habito Beber agua 3 2026-09-03` | Nombre compuesto, valor y fecha | idem |
 | `/habitos` · `/habitos semana` | El día, o la semana con totales y medias | idem |
 | `/hoy` · `/hoy 2026-09-03` | Diario, citas, tareas y hábitos juntos. **Solo lee** | `leer_entrada` + los tres módulos |
 | *(cualquier texto sin comando)* | Se apunta en el diario de hoy, igual que `/diario` | `diario/organizar_diario.py` |
