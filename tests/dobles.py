@@ -66,6 +66,10 @@ class Entidad:
         self.type = tipo
 
 
+class DemasiadoLargo(Exception):
+    """Lo que devuelve Telegram cuando el mensaje pasa de 4096: BadRequest."""
+
+
 class Mensaje:
     def __init__(self, texto: str = "", entidades=None):
         self.text = texto
@@ -73,6 +77,11 @@ class Mensaje:
         self.respuestas: list[str] = []
 
     async def reply_text(self, texto: str) -> None:
+        # Telegram cuenta unidades UTF-16, no caracteres de Python: '📅' es
+        # 1 para len() y 2 para Telegram. Un doble que no lo mida así deja
+        # pasar mensajes que en producción se rechazan.
+        if len(texto.encode("utf-16-le")) // 2 > 4096:
+            raise DemasiadoLargo("Message is too long")
         self.respuestas.append(texto)
 
 

@@ -21,7 +21,7 @@ sys.path.insert(0, str(DIARIO / "tareas"))
 import tareas  # noqa: E402 (requiere sys.path previo)
 from sincronizar import sincronizar  # noqa: E402 (requiere sys.path previo)
 
-from utils.respuestas import breve  # noqa: E402 (coherencia con el resto de handlers)
+from utils.respuestas import breve, responder  # noqa: E402 (requiere sys.path previo)
 
 logger = logging.getLogger(__name__)
 
@@ -61,13 +61,13 @@ async def comando_tarea(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     """/tarea <texto> | /tarea <acción> <id> [texto]"""
     args = context.args
     if not args:
-        await update.message.reply_text(AYUDA)
+        await responder(update, AYUDA)
         return
     accion, resto = args[0], args[1:]
     try:
         if accion in SOLO_ID or accion in CON_TEXTO:
             if not resto or not resto[0].isdigit():
-                await update.message.reply_text(f"❌ Falta el número de la tarea.\n\n{AYUDA}")
+                await responder(update, f"❌ Falta el número de la tarea.\n\n{AYUDA}")
                 return
             id_tarea, resto = int(resto[0]), resto[1:]
             if accion in SOLO_ID:
@@ -75,25 +75,25 @@ async def comando_tarea(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             else:
                 if not resto:
                     falta = "el texto nuevo" if accion == "editar" else "el cuándo"
-                    await update.message.reply_text(f"❌ Falta {falta}.\n\n{AYUDA}")
+                    await responder(update, f"❌ Falta {falta}.\n\n{AYUDA}")
                     return
                 t = CON_TEXTO[accion](id_tarea, " ".join(resto))
-            await update.message.reply_text(
+            await responder(update, 
                 f"{ICONO[accion]} [{t['id']}] {t['texto']}{_cuando(t)} · {_subir()}")
             return
         t = tareas.agregar(" ".join(args))
-        await update.message.reply_text(f"✅ [{t['id']}] {t['texto']}{_cuando(t)} · {_subir()}")
+        await responder(update, f"✅ [{t['id']}] {t['texto']}{_cuando(t)} · {_subir()}")
     except ValueError as e:
-        await update.message.reply_text(f"⚠️ {e}")
+        await responder(update, f"⚠️ {e}")
     except Exception as e:
         logger.exception("Error en /tarea")
-        await update.message.reply_text(f"❌ Error: {e}")
+        await responder(update, f"❌ Error: {e}")
 
 
 async def comando_tareas(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """/tareas — en proceso, pendientes por fecha y últimas hechas."""
     try:
-        await update.message.reply_text(tareas.resumen())
+        await responder(update, tareas.resumen())
     except Exception as e:
         logger.exception("Error en /tareas")
-        await update.message.reply_text(f"❌ Error: {e}")
+        await responder(update, f"❌ Error: {e}")

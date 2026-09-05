@@ -132,8 +132,8 @@ El número va suelto detrás del nombre; la fecha, detrás del número.
 
 `/hoy [AAAA-MM-DD]` junta en un mensaje el diario del día, las citas, las
 tareas y los hábitos. **Solo lee**: si no hay entrada, lo dice en vez de
-crearla, y no sube nada. El diario se recorta a 2500 caracteres (Telegram
-corta en 4096) para que no se coma el resto.
+crearla, y no sube nada. Si el mensaje entero no cabe, lo recorta
+`utils/limites.py`, como cualquier otra respuesta del bot.
 
 ---
 
@@ -144,3 +144,26 @@ corta en 4096) para que no se coma el resto.
 comando nuevo se añade ahí y aparece solo. Si Telegram no contesta, se
 registra el fallo y **el bot arranca igual**: quedarse sin bot por no poder
 pintar una lista sería peor.
+
+---
+
+## El límite de Telegram
+
+**Todo lo que sale del bot pasa por `responder(update, texto)`**
+(`utils/respuestas.py`). Es un punto único a propósito: había 47 llamadas
+sueltas a `reply_text`, cualquiera podía pasarse de los 4096 de Telegram, y
+algunas ni siquiera estaban dentro de un `try` — así que el error no llegaba
+al usuario, se quedaba en el log.
+
+`utils/limites.py` mide en **unidades UTF-16, como hace Telegram**, no con
+`len()`: `📅` mide 1 para Python y 2 para Telegram, y hay una banda real
+donde `len()` dice que cabe y Telegram lo rechaza. Recorta por **líneas
+enteras** y dice cuántas faltan (`… y 92 líneas más`), porque una tarea
+cortada por la mitad pierde su id, que es el asa para actuar sobre ella. Y
+conserva las primeras, que el dominio ya ordena por urgencia.
+
+Medido el 2026-09-05, antes del arreglo: `/hoy` reventaba con **29 tareas
+pendientes**, `/tareas` con 81, `/agenda semana` con 126 citas y
+`/habitos semana` con 68 hábitos. Cuando pasaba, el bot contestaba
+`❌ Error: Message is too long` y ese comando quedaba inservible hasta
+limpiar la lista.

@@ -13,6 +13,8 @@ from pathlib import Path
 from telegram import Update
 from telegram.ext import ContextTypes
 
+from utils.respuestas import responder  # noqa: E402 (requiere sys.path previo)
+
 # Ruta a midgaror/diario/ (4 niveles arriba desde handlers/)
 MIDGAROR = Path(__file__).resolve().parent.parent.parent.parent
 DIARIO = MIDGAROR / "diario"
@@ -46,9 +48,9 @@ async def comando_hoy(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
             "\n📋 Tareas\n" + tareas.resumen(hoy=fecha),
             "\n🔁 Hábitos\n" + habitos.resumen_dia(fecha),
         ]
-        await update.message.reply_text("\n".join(partes))
+        await responder(update, "\n".join(partes))
     except ValueError as e:
-        await update.message.reply_text(f"⚠️ {e}")
+        await responder(update, f"⚠️ {e}")
     except Exception as e:
         logger.exception("Error en /hoy")
-        await update.message.reply_text(f"❌ Error: {e}")
+        await responder(update, f"❌ Error: {e}")
