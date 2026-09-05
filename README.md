@@ -139,8 +139,15 @@ python3 bot.py
 Para que el bot no dependa de una terminal abierta. La unidad está en
 [`systemd/bifrost.service`](systemd/bifrost.service).
 
+La unidad apunta a **`~/GitHub/personal/midgaror-bot`**, una copia del repo
+que es solo del bot y está siempre en `main`, no a la copia de trabajo. Un
+`git checkout` mientras el servicio está vivo le cambiaría el diario, la rama
+a la que commitea y el código que carga al reiniciar. Cómo montarla:
+[`docs/infra/bifrost.md`](https://github.com/alvarofernandezmota-tech/midgaror/blob/main/docs/infra/bifrost.md),
+sección «El bot tiene su propia copia del repo».
+
 **Antes de instalarla**, comprueba que las rutas del fichero coinciden con
-las tuyas. Llevan `varopc` y `~/GitHub/personal/midgaror` escritos dentro:
+las tuyas. Llevan `varopc` y `~/GitHub/personal/midgaror-bot` escritos dentro:
 
 ```bash
 grep -E "User=|WorkingDirectory=|ExecStart=|ReadWritePaths=" systemd/bifrost.service
