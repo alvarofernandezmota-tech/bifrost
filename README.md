@@ -326,9 +326,15 @@ pasado hoy", con la hora delante, sin pisar lo que ya hubiera. Lo único que
 cambia es el día.
 
 **Escribir sin comando es lo normal.** El handler de texto libre se registra
-el último, así que los comandos mandan; solo recoge lo que no empieza por
-`/`. Sin él, mandar «hoy he dormido fatal» dejaba al bot callado y el texto
-se perdía.
+el último, así que los comandos mandan. Sin él, mandar «hoy he dormido fatal»
+dejaba al bot callado y el texto se perdía.
+
+**Y no se traga comandos.** «Lo que Telegram marca como comando» no es lo
+mismo que «lo que empieza por `/`»: un comando **pegado con formato de
+código** llega sin la marca `bot_command` y caía aquí. El 2026-09-05 se
+fueron treinta comandos seguidos al diario en vez de ejecutarse, sin un solo
+aviso. Ahora, cualquier texto que empiece por `/` se rechaza con un aviso que
+además lo devuelve, para reenviarlo sin reescribirlo.
 
 Las respuestas son cortas a propósito: `📔 Apuntado en el diario de hoy ·
 subido`. Antes cada escritura devolvía la ruta completa del fichero en el

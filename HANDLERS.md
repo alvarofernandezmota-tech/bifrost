@@ -36,8 +36,15 @@ Lo mismo, en el día que se diga. Crea la entrada si no existe.
 **Módulo**: `handlers/texto.py` → lo mismo que `/diario`
 
 Se registra **el último** en `bot.py`, con `filters.TEXT & ~filters.COMMAND`,
-así que los comandos mandan y solo recoge lo que no empieza por `/`. Escribir
-sin comando es lo normal: es como se usa el bot el 90 % de las veces.
+así que los comandos mandan. Escribir sin comando es lo normal: es como se usa
+el bot el 90 % de las veces.
+
+Pero `~filters.COMMAND` **no** quiere decir «no empieza por `/`»: quiere decir
+«Telegram no lo marcó como `bot_command`». Un comando pegado con formato de
+código llega marcado como `code` y cae aquí. Por eso el handler rechaza todo
+lo que empiece por `/` con un aviso, y lo devuelve para poder reenviarlo. La
+alternativa —escribirlo en el diario— es tragarse un comando en silencio, que
+es lo que pasó el 2026-09-05 treinta veces seguidas.
 
 ---
 
