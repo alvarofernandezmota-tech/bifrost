@@ -5,6 +5,7 @@ midgaror/diario/tareas/tareas.py y aquí solo se traduce el mensaje de
 Telegram a una llamada y la respuesta a texto.
 """
 
+import asyncio
 import logging
 import sys
 from pathlib import Path
@@ -46,8 +47,13 @@ ICONO = {"empezar": "◐", "hecha": "✅", "reabrir": "○", "borrar": "🗑️"
 CON_TEXTO = {"editar": tareas.editar, "aplazar": tareas.aplazar}
 
 
-def _subir() -> str:
-    return breve(sincronizar(tareas.RUTA_DATOS, "diario: tareas desde bifrost"))
+async def _subir() -> str:
+    # sincronizar() hace git commit y git push: hasta 90 s con mala red.
+    # Dentro de una corrutina eso congela el bot entero para todos los
+    # chats, no solo para quien mando el mensaje. to_thread lo saca del
+    # hilo del bucle de eventos, que sigue atendiendo lo demas.
+    return breve(await asyncio.to_thread(
+        sincronizar, tareas.RUTA_DATOS, "diario: tareas desde bifrost"))
 
 
 def _cuando(t: dict) -> str:
@@ -78,11 +84,13 @@ async def comando_tarea(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
                     await responder(update, f"❌ Falta {falta}.\n\n{AYUDA}")
                     return
                 t = CON_TEXTO[accion](id_tarea, " ".join(resto))
+            subido = await _subir()
             await responder(update, 
-                f"{ICONO[accion]} [{t['id']}] {t['texto']}{_cuando(t)} · {_subir()}")
+                f"{ICONO[accion]} [{t['id']}] {t['texto']}{_cuando(t)} · {subido}")
             return
         t = tareas.agregar(" ".join(args))
-        await responder(update, f"✅ [{t['id']}] {t['texto']}{_cuando(t)} · {_subir()}")
+        subido = await _subir()
+        await responder(update, f"✅ [{t['id']}] {t['texto']}{_cuando(t)} · {subido}")
     except ValueError as e:
         await responder(update, f"⚠️ {e}")
     except Exception as e:

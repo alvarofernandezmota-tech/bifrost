@@ -9,6 +9,7 @@ Como el resto de bifrost, esto es solo interfaz: quién escribe dónde y con
 qué formato lo decide `organizar_diario.SECCIONES` en midgaror.
 """
 
+import asyncio
 import logging
 import sys
 from pathlib import Path
@@ -48,7 +49,12 @@ async def _escribir(update: Update, context: ContextTypes.DEFAULT_TYPE, comando:
         return
     try:
         ruta = organizar_texto(texto, seccion=seccion)
-        await responder(update, f"{confirmacion} · {breve(sincronizar(ruta))}")
+        # sincronizar() hace git commit y git push: hasta 90 s con mala red.
+        # Dentro de una corrutina eso congela el bot entero para todos los
+        # chats, no solo para quien mando el mensaje. to_thread lo saca del
+        # hilo del bucle de eventos, que sigue atendiendo lo demas.
+        subido = breve(await asyncio.to_thread(sincronizar, ruta))
+        await responder(update, f"{confirmacion} · {subido}")
     except ValueError as e:
         await responder(update, f"⚠️ {e}")
     except Exception as e:
