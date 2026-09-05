@@ -73,8 +73,13 @@ cd proyectos/bifrost
    ```bash
    python3 -m venv venv
    source venv/bin/activate
-   pip install python-telegram-bot python-dotenv
+   pip install -r requirements.txt
    ```
+
+   Las versiones van fijadas en `requirements.txt` a propósito: el bot corre
+   como servicio en Madre y se actualiza con un `git pull`, así que una
+   versión nueva de `python-telegram-bot` que cambie la API lo dejaría sin
+   arrancar sin haber tocado el código.
 
 4. **Configurar el `.env`:**
 
