@@ -56,7 +56,7 @@ delante, sin pisar lo que ya hubiera.
 
 ---
 
-## `/entrada <AAAA-MM-DD> <texto>`
+## `/entrada <día> <texto>`
 
 **Módulo**: `handlers/entrada.py` → `escribir_entrada()` de
 `midgaror/diario/bifrost_bridge.py`
@@ -158,10 +158,13 @@ dos cosas a la misma hora pasan, y quien decide es Álvaro.
 | `/habito Beber agua 3 2026-09-03` | nombre compuesto, valor y fecha a la vez |
 | `/habitos` · `/habitos semana` | el día, o la semana con totales y medias |
 
-El final del mensaje se lee **por descarte**, y en este orden: el último
-argumento es la fecha solo si tiene forma `AAAA-MM-DD`; el siguiente por la
-cola es el valor solo si es un entero **y queda algo detrás para el nombre**;
-todo lo que sobra es el nombre, unido con espacios.
+El final del mensaje se lee **por descarte**, y en este orden: del final se
+quita la fecha si lo es —«ayer», «antes de ayer», «el lunes», `AAAA-MM-DD`;
+se prueba primero el trozo más largo, y siempre dejando algo para el nombre—;
+el siguiente por la cola es el valor solo si es un entero **y queda algo
+detrás para el nombre**; todo lo que sobra es el nombre, unido con espacios.
+Una fecha escrita con números que `fechas.py` no entienda («2026-13-45») da
+aviso en vez de convertirse en un hábito llamado así.
 
 Tiene que ser por descarte porque el nombre puede llevar espacios y Telegram
 entrega los argumentos ya partidos: no hay manera de saber dónde acaba el
@@ -176,11 +179,38 @@ sale barato: el hábito raro se ve en `/habitos` del mismo día.
 
 ---
 
+## Las fechas, en español
+
+Desde el 2026-09-06 ningún comando exige `AAAA-MM-DD`: donde iba una fecha
+vale «ayer», «antes de ayer», «hace 3 días», «el lunes», «el 15 de octubre»,
+«04/09/2026» o la fecha entera. Lo resuelve `diario/fechas.py` de midgaror;
+los handlers solo le pasan el trozo que toca. Tres reglas:
+
+| Dónde | Qué se lee | Sentido |
+|---|---|---|
+| `/hoy`, `/habito`, `/habitos`, `/entrada` | el argumento de fecha | **hacia atrás**: «el lunes» es el que ya pasó, porque un día se revisa y un hábito se apunta después |
+| `/agenda`, `/tarea`, `/cita` | el argumento o la fecha dentro del texto | **hacia delante**: la agenda se mira para lo que viene |
+| `/diario`, `/siento`, `/aprendo`, `/plan`, texto suelto | **solo una fecha pasada al final** | «cené con Ana ayer» va a ayer, sin el «ayer» |
+
+La tercera es la que hay que tener clara. En el diario **el futuro no es una
+fecha, es parte de lo que se cuenta**: «tengo examen mañana» es una frase de
+hoy y se queda entera en hoy. Y lo ambiguo tampoco cuenta: «quedo con Ana el
+lunes» se queda en hoy, porque leído hacia atrás se iría a la semana pasada.
+Solo cortan «ayer», «antes de ayer», «hace N días» y una fecha completa; la
+hora se queda en la frase («cené a las 10 ayer» corta «ayer» y deja «a las
+10»). Para un día ambiguo está `/entrada el lunes fui al médico`, con la
+fecha delante y a posta.
+
+Cuando lo escrito fue a otro día, la confirmación lo dice: «📔 Apuntado en el
+diario **del 2026-09-05**» en vez de «de hoy».
+
+---
+
 ## `/hoy`
 
 **Módulo**: `handlers/hoy.py` → `leer_entrada` + `agenda` + `tareas` + `habitos`
 
-`/hoy [AAAA-MM-DD]` junta en un mensaje el diario del día, las citas, las
+`/hoy [ayer | el lunes | AAAA-MM-DD]` junta en un mensaje el diario del día, las citas, las
 tareas y los hábitos. **Solo lee**: si no hay entrada, lo dice en vez de
 crearla, y no sube nada. Si el mensaje entero no cabe, lo recorta
 `utils/limites.py`, como cualquier otra respuesta del bot.

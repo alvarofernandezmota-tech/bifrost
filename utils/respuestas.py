@@ -30,6 +30,11 @@ def breve(mensaje_sincronizar: str) -> str:
     return "subido"
 
 
+def dia(fecha: str | None) -> str:
+    """«de hoy», o «del 2026-09-05» cuando lo escrito fue a otro día."""
+    return "de hoy" if fecha is None else f"del {fecha}"
+
+
 async def responder(update, texto: str) -> None:
     """Contesta, recortando si no cabe en un mensaje de Telegram.
 

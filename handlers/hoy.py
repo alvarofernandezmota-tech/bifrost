@@ -15,6 +15,7 @@ from utils.midgaror import modulo
 from utils.respuestas import responder
 
 agenda = modulo("agenda")
+fechas = modulo("fechas")
 habitos = modulo("habitos")
 tareas = modulo("tareas")
 leer_entrada = modulo("bifrost_bridge").leer_entrada
@@ -27,9 +28,11 @@ TOPE_DIARIO = 2500
 
 
 async def comando_hoy(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """/hoy [AAAA-MM-DD] — diario, citas, tareas y hábitos de ese día."""
-    fecha = context.args[0] if context.args else None
+    """/hoy [ayer | el lunes | AAAA-MM-DD] — diario, citas, tareas y hábitos de ese día."""
     try:
+        # Hacia atrás: un día se revisa después de vivirlo. «/hoy mañana»
+        # sigue siendo mañana, que es explícito.
+        fecha = fechas.normalizar(" ".join(context.args), hacia_atras=True) if context.args else None
         diario = leer_entrada(fecha)
         if len(diario) > TOPE_DIARIO:
             diario = diario[:TOPE_DIARIO].rstrip() + "\n…(recortado)"

@@ -7,8 +7,9 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from utils.midgaror import modulo
-from utils.respuestas import breve, responder
+from utils.respuestas import breve, dia, responder
 
+fechas = modulo("fechas")
 organizar_texto = modulo("organizar_diario").organizar_texto
 sincronizar = modulo("sincronizar").sincronizar
 
@@ -24,14 +25,18 @@ async def comando_diario(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             "/diario hoy he dormido fatal")
         return
 
+    # «cené con mi hermana ayer» va al día de ayer, sin el «ayer». Solo el
+    # pasado sin ambigüedad cuenta (fechas.fecha_detras): «tengo examen
+    # mañana» es una frase de hoy y se queda entera.
+    texto, fecha = fechas.fecha_detras(texto)
     try:
-        ruta = organizar_texto(texto)
+        ruta = organizar_texto(texto, fecha=fecha)
         # sincronizar() hace git commit y git push: hasta 90 s con mala red.
         # Dentro de una corrutina eso congela el bot entero para todos los
         # chats, no solo para quien mando el mensaje. to_thread lo saca del
         # hilo del bucle de eventos, que sigue atendiendo lo demas.
         subido = breve(await asyncio.to_thread(sincronizar, ruta))
-        await responder(update, f"📔 Apuntado en el diario de hoy · {subido}")
+        await responder(update, f"📔 Apuntado en el diario {dia(fecha)} · {subido}")
     except Exception as e:
         logger.exception("Error escribiendo en el diario de hoy")
         await responder(update, f"❌ Error: {e}")

@@ -53,6 +53,7 @@ que envolverse en `logs_visibles()`, que lo enciende dentro del `with`.
 | `test_limites.py` | que ningún comando se pase de los 4096 de Telegram: listas enormes, ecos del texto del usuario y el aviso de comando pegado |
 | `test_menu.py` | que el menú de «/» y los `CommandHandler` no se separen; lee `bot.py` con `ast`, sin arrancar el bot |
 | `test_auth.py` | quién puede darle órdenes al bot: cómo se lee `TELEGRAM_CHAT_ID` y que el aviso de «sin restricción» esté ahí |
+| `test_fechas_handlers.py` | «ayer», «antes de ayer», «el lunes» en cada comando; y que en el diario **solo el pasado al final** cambia de día («tengo examen mañana» se queda en hoy) |
 
 ## Lo que estas pruebas NO dicen
 

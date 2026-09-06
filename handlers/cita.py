@@ -80,14 +80,15 @@ async def comando_cita(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 
 async def comando_agenda(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """/agenda [semana] [AAAA-MM-DD]"""
+    """/agenda [semana] [mañana | el lunes | AAAA-MM-DD]"""
     args = list(context.args)
     semana = bool(args) and args[0] == "semana"
     if semana:
         args = args[1:]
     try:
+        # El día puede ser varias palabras («el lunes que viene»); lo entiende agenda.
         await responder(update, 
-            agenda.resumen(args[0] if args else None, semana=semana))
+            agenda.resumen(" ".join(args) or None, semana=semana))
     except ValueError as e:
         await responder(update, f"⚠️ {e}")
     except Exception as e:
