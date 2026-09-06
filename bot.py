@@ -5,7 +5,8 @@ import logging
 import os
 from dotenv import load_dotenv
 from telegram import BotCommand, Update
-from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
+from telegram.ext import (Application, CallbackQueryHandler, CommandHandler, ContextTypes,
+                          MessageHandler, filters)
 
 # Importar handlers
 from handlers.cita import comando_agenda, comando_cita
@@ -13,6 +14,7 @@ from handlers.diario import comando_diario
 from handlers.entrada import comando_entrada
 from handlers.habito import comando_habito, comando_habitos
 from handlers.hoy import comando_hoy
+from handlers.menu import boton, comando_menu, respuesta_al_menu
 from handlers.secciones import comando_aprendo, comando_plan, comando_siento
 from handlers.tarea import comando_tarea, comando_tareas
 from handlers.texto import mensaje_libre
@@ -42,6 +44,7 @@ logger = logging.getLogger(__name__)
 # chat. Se registra al arrancar con setMyCommands, así que la lista de aquí es
 # la única fuente: si se añade un comando, se añade aquí y aparece solo.
 MENU = [
+    ("menu", "Botones: apunta sin escribir el comando"),
     ("hoy", "El día de un vistazo"),
     ("diario", "Apunta algo en el diario de hoy"),
     ("siento", "Cómo te sientes ahora mismo"),
@@ -83,6 +86,7 @@ async def comando_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         "/habito deporte\n"
         "/hoy — el día de un vistazo\n\n"
         "O escribe sin más: lo que mandes sin comando va al diario de hoy.\n"
+        "Y /menu te da botones, para no escribir ni el comando.\n"
         "Pulsa «/» para ver todos los comandos, o /help para el detalle."
     )
 
@@ -92,6 +96,10 @@ async def comando_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     await responder(update, 
         "📖 Ayuda de Bifrost\n\n"
         "Los ejemplos son literales: escribe lo que ves, sin < ni >.\n\n"
+        "BOTONES\n"
+        "/menu                     un botón por cosa: tocas, te pregunta, escribes\n"
+        "Es lo cómodo desde el móvil: el menú de «/» envía el comando solo,\n"
+        "sin dejarte poner el texto detrás.\n\n"
         "DIARIO\n"
         "/diario hoy he dormido fatal\n"
         "   añade el texto a «Qué ha pasado hoy», con la hora delante\n"
@@ -154,6 +162,7 @@ def main() -> None:
 
     app.add_handler(CommandHandler("start", comando_start, filters=autorizado))
     app.add_handler(CommandHandler("help", comando_help, filters=autorizado))
+    app.add_handler(CommandHandler("menu", comando_menu, filters=autorizado))
     app.add_handler(CommandHandler("diario", comando_diario, filters=autorizado))
     app.add_handler(CommandHandler("entrada", comando_entrada, filters=autorizado))
     app.add_handler(CommandHandler("siento", comando_siento, filters=autorizado))
@@ -166,6 +175,17 @@ def main() -> None:
     app.add_handler(CommandHandler("habito", comando_habito, filters=autorizado))
     app.add_handler(CommandHandler("habitos", comando_habitos, filters=autorizado))
     app.add_handler(CommandHandler("hoy", comando_hoy, filters=autorizado))
+
+    # Los botones de /menu. El filtro de chat no vale para un callback_query:
+    # la autorizacion la comprueba el propio handler.
+    app.add_handler(CallbackQueryHandler(boton))
+
+    # Antes del texto libre: lo que responde a una pregunta del menu va al
+    # handler de esa pregunta. Lo que responde a otra cosa, al diario.
+    respuestas = filters.REPLY & filters.TEXT & ~filters.COMMAND
+    if autorizado:
+        respuestas &= autorizado
+    app.add_handler(MessageHandler(respuestas, respuesta_al_menu))
 
     # El ultimo: cualquier texto que no sea un comando va al diario de hoy.
     solo_texto = filters.TEXT & ~filters.COMMAND
