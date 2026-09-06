@@ -7,22 +7,15 @@ Telegram a una llamada y la respuesta a texto.
 
 import asyncio
 import logging
-import sys
-from pathlib import Path
 
 from telegram import Update
 from telegram.ext import ContextTypes
 
-# Ruta a midgaror/diario/ (4 niveles arriba desde handlers/)
-MIDGAROR = Path(__file__).resolve().parent.parent.parent.parent
-DIARIO = MIDGAROR / "diario"
-sys.path.insert(0, str(DIARIO))
-sys.path.insert(0, str(DIARIO / "tareas"))
+from utils.midgaror import modulo
+from utils.respuestas import breve, responder
 
-import tareas  # noqa: E402 (requiere sys.path previo)
-from sincronizar import sincronizar  # noqa: E402 (requiere sys.path previo)
-
-from utils.respuestas import breve, responder  # noqa: E402 (requiere sys.path previo)
+tareas = modulo("tareas")
+sincronizar = modulo("sincronizar").sincronizar
 
 logger = logging.getLogger(__name__)
 

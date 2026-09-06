@@ -24,6 +24,7 @@ bifrost/
 │ └─ texto.py # mensaje sin comando → diario de hoy
 ├─ utils/
 │ ├─ auth.py # autorización por chat_id
+│ ├─ midgaror.py # dónde está midgaror y cómo se importan sus módulos
 │ └─ respuestas.py # cómo se contesta: breve si va bien, entero si falla
 ├─ venv/ # Entorno virtual (NO commitear)
 ├─ .env # Token y chat_id (NO commitear)
@@ -41,11 +42,13 @@ text
 
 ## Dónde tiene que vivir este repo
 
-**Importante:** bifrost no funciona clonado por su cuenta. Los handlers
-buscan el diario cuatro niveles por encima de `handlers/`, así que el repo
-tiene que estar en `midgaror/proyectos/bifrost`, que es donde lo pone el
-submódulo. Clonado en otro sitio, los imports de `midgaror/diario/` fallan
-al arrancar.
+**Importante:** bifrost no funciona clonado por su cuenta.
+[`utils/midgaror.py`](utils/midgaror.py) busca el diario cuatro niveles por
+encima de `utils/`, así que el repo tiene que estar en
+`midgaror/proyectos/bifrost`, que es donde lo pone el submódulo. Clonado en
+otro sitio, los imports de `midgaror/diario/` fallan al arrancar. Ese fichero
+es el único que lo sabe: si algún día bifrost se instala como paquete, es el
+único que hay que tocar.
 
 ```bash
 cd ~/GitHub/personal/midgaror     # o donde tengas midgaror

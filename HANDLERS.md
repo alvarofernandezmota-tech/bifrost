@@ -18,6 +18,32 @@ el bot deja de responder **a todos los chats** mientras dura, no solo a quien
 mandó el mensaje. `to_thread` lo saca a un hilo aparte y el bucle sigue
 atendiendo lo demás. Un handler nuevo que escriba algo tiene que hacerlo igual.
 
+## Cómo se importa midgaror
+
+Por [`utils/midgaror.py`](utils/midgaror.py), y solo por ahí:
+
+```python
+from utils.midgaror import modulo
+from utils.respuestas import breve, responder
+
+tareas = modulo("tareas")
+sincronizar = modulo("sincronizar").sincronizar
+```
+
+Bifrost es un submódulo dentro de midgaror y no se instala, así que el diario
+se importa por ruta. Antes cada handler repetía el mismo preámbulo —subir
+cuatro niveles con `Path(__file__).resolve()`, uno o dos `sys.path.insert`, y
+los imports con `# noqa: E402` por quedar debajo de código—: ocho ficheros con
+las mismas líneas y ningún sitio donde arreglarlo una vez. Ahora lo hace
+`utils/midgaror.py` al importarse, y no queda ni un `# noqa: E402` en
+`handlers/`.
+
+Lo que sale de `modulo(...)` se asigna a un **nombre de módulo**, nunca dentro
+de una función. Es lo que permite que `tests/dobles.py` sustituya `sincronizar`
+handler por handler para que las pruebas no hagan `git push` de verdad; si se
+importara dentro de la corrutina, ese doble dejaría de aplicarse y las pruebas
+empezarían a escribir en el repo.
+
 ---
 
 ## `/diario <texto>`

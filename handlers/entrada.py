@@ -3,21 +3,15 @@
 import asyncio
 import logging
 import re
-import sys
-from pathlib import Path
 
 from telegram import Update
 from telegram.ext import ContextTypes
 
-# Ruta a midgaror/diario/ (4 niveles arriba desde handlers/)
-MIDGAROR = Path(__file__).resolve().parent.parent.parent.parent
-DIARIO = MIDGAROR / "diario"
-sys.path.insert(0, str(DIARIO))
+from utils.midgaror import modulo
+from utils.respuestas import breve, responder
 
-from bifrost_bridge import escribir_entrada  # noqa: E402 (requiere sys.path previo)
-from sincronizar import sincronizar  # noqa: E402 (requiere sys.path previo)
-
-from utils.respuestas import breve, responder  # noqa: E402 (requiere sys.path previo)
+escribir_entrada = modulo("bifrost_bridge").escribir_entrada
+sincronizar = modulo("sincronizar").sincronizar
 
 logger = logging.getLogger(__name__)
 
