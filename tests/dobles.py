@@ -163,9 +163,18 @@ class Consulta:
 
 class Actualizacion:
     def __init__(self, texto: str = "", entidades=None, responde_a=None,
-                 boton: str | None = None, chat_id: int = 1):
+                 boton: str | None = None, chat_id: int = 1, editado: bool = False):
         self.effective_chat = Chat(chat_id)
-        if boton is None:
+        # Un mensaje editado no tiene `message`, tiene `edited_message`. El
+        # bot lo deja fuera con un filtro, pero si alguno se colara,
+        # effective_message sigue dando el mensaje (como en la librería), y es
+        # ahí donde los handlers tienen que mirar en vez de en `message`.
+        self.edited_message = None
+        if editado:
+            self.edited_message = Mensaje(texto, entidades, responde_a)
+            self.message = None
+            self.callback_query = None
+        elif boton is None:
             self.message = Mensaje(texto, entidades, responde_a)
             self.callback_query = None
         else:
@@ -177,7 +186,11 @@ class Actualizacion:
 
     @property
     def effective_message(self) -> "Mensaje":
-        return self.message if self.message is not None else self.callback_query.message
+        if self.message is not None:
+            return self.message
+        if self.edited_message is not None:
+            return self.edited_message
+        return self.callback_query.message
 
 
 class Contexto:

@@ -39,7 +39,7 @@ AVISO_COMANDO = (
 
 async def mensaje_libre(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Cualquier texto que no sea un comando: al diario de hoy."""
-    texto = (update.message.text or "").strip()
+    texto = (update.effective_message.text or "").strip()
     if not texto:
         return
     if texto.startswith("/"):
@@ -48,7 +48,7 @@ async def mensaje_libre(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         # diario sería tragárselo en silencio. Se avisa y se devuelve el texto
         # para poder reenviarlo sin volver a escribirlo.
         logger.warning("Texto que parece comando y no lo es (entidades: %s): %r",
-                       [e.type for e in (update.message.entities or [])], texto[:80])
+                       [e.type for e in (update.effective_message.entities or [])], texto[:80])
         await responder(update, AVISO_COMANDO.format(texto=texto))
         return
     # «cené con mi hermana ayer» va al día de ayer, sin el «ayer». Solo el

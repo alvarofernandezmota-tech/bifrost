@@ -129,9 +129,9 @@ async def respuesta_al_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     comando. Si responde a cualquier otra cosa, es texto libre y sigue el
     camino de siempre.
     """
-    original = update.message.reply_to_message
+    original = update.effective_message.reply_to_message
     handler = _handler_de(original.text if original else None)
-    texto = (update.message.text or "").strip()
+    texto = (update.effective_message.text or "").strip()
     if handler is None or texto.startswith("/"):
         # O no es una respuesta nuestra, o es un comando pegado sin marca de
         # comando, y de avisar de eso ya sabe texto.py.
