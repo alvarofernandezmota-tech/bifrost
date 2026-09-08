@@ -6,6 +6,7 @@ import logging
 from telegram import Update
 from telegram.ext import ContextTypes
 
+from utils.mensajes import texto_tras_comando
 from utils.midgaror import modulo
 from utils.respuestas import breve, responder
 
@@ -29,7 +30,7 @@ async def comando_entrada(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     # La fecha va delante y puede ser varias palabras («antes de ayer»);
     # fechas.fecha_delante prueba primero el trozo más largo y resuelve hacia
     # atrás: lo que se apunta con fecha delante ya pasó.
-    fecha, texto = fechas.fecha_delante(" ".join(context.args))
+    fecha, texto = fechas.fecha_delante(texto_tras_comando(update))
     if fecha is None or not texto:
         await responder(update, AYUDA)
         return

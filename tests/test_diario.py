@@ -98,5 +98,48 @@ class TestNoSeTragaComandos(CasoBot):
         self.assertEqual(self.seccion(HOY), "")
 
 
+class TestSaltosDeLinea(CasoBot):
+    """El bug del 2026-09-08: escribir varias líneas y que lleguen aplastadas.
+
+    En Telegram varias líneas son shift+enter, no un truco, y `context.args`
+    viene ya partido por ellas: recomponerlo con `" ".join` deja un párrafo
+    corrido y el original no se puede recuperar. Cada prueba de aquí manda el
+    mensaje entero, como lo manda la librería.
+    """
+
+    DOS_LINEAS = "me he levantado tarde\nluego he ido al gimnasio"
+
+    def test_diario_conserva_los_saltos(self):
+        self.enviar_texto(comando_diario, f"/diario {self.DOS_LINEAS}")
+        self.assertIn(self.DOS_LINEAS, self.seccion(HOY))
+
+    def test_una_seccion_conserva_los_saltos(self):
+        self.enviar_texto(comando_siento, f"/siento {self.DOS_LINEAS}")
+        self.assertIn(self.DOS_LINEAS, self.seccion(SIENTO))
+
+    def test_entrada_conserva_los_saltos_y_la_fecha_sigue_delante(self):
+        self.enviar_texto(comando_entrada, f"/entrada 2026-09-04 {self.DOS_LINEAS}")
+        otro = self.base / "2026-09-04.md"
+        self.assertIn(self.DOS_LINEAS, self.seccion(HOY, otro))
+        self.assertEqual(self.seccion(HOY), "")   # el de hoy, intacto
+
+    def test_el_boton_del_menu_tambien_los_conserva(self):
+        # El botón acaba en el mismo handler que el comando, así que si el
+        # comando los conserva y el botón no, es que se pierden por el camino.
+        from handlers.menu import ACCIONES
+        self.contestar(ACCIONES["diario"][1], self.DOS_LINEAS)
+        self.assertIn(self.DOS_LINEAS, self.seccion(HOY))
+
+    def test_el_texto_puede_empezar_en_la_linea_de_abajo(self):
+        self.enviar_texto(comando_diario, "/diario\nempieza abajo del todo")
+        self.assertIn("empieza abajo del todo", self.seccion(HOY))
+
+    def test_el_nombre_del_bot_pegado_al_comando_no_entra_en_el_diario(self):
+        # En un grupo, Telegram manda «/diario@midgaror_bot texto».
+        self.enviar_texto(comando_diario, "/diario@midgaror_bot cena con Thea")
+        self.assertIn("cena con Thea", self.seccion(HOY))
+        self.assertNotIn("midgaror_bot", self.seccion(HOY))
+
+
 if __name__ == "__main__":
     unittest.main()
