@@ -3,6 +3,7 @@
 
 import logging
 import os
+import time
 from dotenv import load_dotenv
 from telegram import BotCommand, Update
 from telegram.ext import (Application, CallbackQueryHandler, CommandHandler, ContextTypes,
@@ -206,5 +207,35 @@ def main() -> None:
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
+def arrancar(espera: int = 15, tope: int = 12) -> None:
+    """Arranca el bot, reintentando si al conectar no hay red.
+
+    Al reiniciar Madre, la red puede tardar un minuto en estar, y el bot
+    moriria antes con un NetworkError. Aqui se reintenta con una espera fija
+    hasta `tope` veces (unos tres minutos), que cubre de sobra el arranque de
+    una maquina. Un InvalidToken NO se reintenta: eso es un error de
+    configuracion, no un problema de red, y reintentar solo lo esconderia.
+    Sale entonces, y systemd (sin tope de reinicios) lo volvera a intentar.
+    """
+    # Import local: arriba chocaria con el telegram falso que instalan las
+    # pruebas (dobles.py) al importar este modulo con ast/import.
+    from telegram.error import InvalidToken, NetworkError
+    for intento in range(1, tope + 1):
+        try:
+            main()
+            return
+        except NetworkError as e:
+            if intento == tope:
+                logger.error("Sin red tras %d intentos; me rindo y que systemd reintente: %s",
+                             tope, e)
+                raise
+            logger.warning("No hay red todavia (intento %d/%d): %s. Reintento en %d s.",
+                           intento, tope, e, espera)
+            time.sleep(espera)
+        except InvalidToken:
+            logger.error("El TELEGRAM_BOT_TOKEN no vale. Esto no es la red: revisa el .env.")
+            raise
+
+
 if __name__ == "__main__":
-    main()
+    arrancar()

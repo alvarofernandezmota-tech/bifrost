@@ -15,10 +15,16 @@ Description=bifrost - bot de Telegram para el diario personal
 Documentation=https://github.com/alvarofernandezmota-tech/bifrost
 After=network-online.target
 Wants=network-online.target
-# Tope de reinicios: 5 en 5 minutos. Va en [Unit], no en [Service]: puesto
-# en [Service] systemd lo ignora con un aviso y el tope no existe.
-StartLimitIntervalSec=300
-StartLimitBurst=5
+# Sin tope de reinicios. Antes habia uno (5 en 5 min), pensado para que un
+# bot roto no reintentara en bucle eterno. Pero el fallo mas probable al
+# arrancar no es un bot roto: es que no haya red todavia (se reinicia Madre y
+# la red tarda un minuto). bot.py sin red muere en <1 s, asi que los 5
+# reintentos se gastan en ~50 s y systemd marca la unidad `failed` PARA
+# SIEMPRE, aunque la red vuelva a los dos minutos; hay que entrar a hacer
+# `systemctl reset-failed` a mano. Con el tope quitado, reintenta cada 10 s
+# hasta que la red este. Un error de configuracion de verdad (token invalido)
+# lo corta bot.py saliendo, no el tope. Auditoria del 2026-09-08.
+StartLimitIntervalSec=0
 
 [Service]
 Type=simple
