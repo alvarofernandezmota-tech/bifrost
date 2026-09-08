@@ -156,8 +156,8 @@ def main() -> None:
     logger.info("✅ Iniciando bot de Telegram...")
     app = Application.builder().token(TOKEN).post_init(registrar_menu).build()
 
-    # Sin TELEGRAM_CHAT_ID en el .env esto es None y el bot responde a todos,
-    # avisando por el log. Con el id puesto, los demas no reciben respuesta.
+    # Nunca es None: sin ids validos en el .env, el filtro no deja pasar a
+    # nadie y auth.py lo grita por el log. Cerrado por defecto a proposito.
     autorizado = filtro_autorizado()
 
     app.add_handler(CommandHandler("start", comando_start, filters=autorizado))
@@ -188,9 +188,7 @@ def main() -> None:
     app.add_handler(MessageHandler(respuestas, respuesta_al_menu))
 
     # El ultimo: cualquier texto que no sea un comando va al diario de hoy.
-    solo_texto = filters.TEXT & ~filters.COMMAND
-    if autorizado:
-        solo_texto &= autorizado
+    solo_texto = filters.TEXT & ~filters.COMMAND & autorizado
     app.add_handler(MessageHandler(solo_texto, mensaje_libre))
 
     logger.info("🤖 Bot en marcha. Escuchando comandos...")

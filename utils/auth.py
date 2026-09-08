@@ -4,10 +4,13 @@ Sin esto el bot obedece a cualquiera que lo encuentre, y este bot escribe en
 el diario personal. La lista de chats autorizados sale de TELEGRAM_CHAT_ID en
 el .env, separando por comas si hay varios.
 
-Si la variable no esta puesta, el bot sigue respondiendo a todo el mundo, como
-hasta ahora, pero avisa por el log al arrancar. Se deja asi a proposito para
-no romper una instalacion existente al actualizar; el aviso es el que empuja a
-configurarlo.
+Si no hay ningun id valido, el bot **no autoriza a nadie** y lo grita por el
+log al arrancar. Antes hacia lo contrario -sin la variable respondia a todo el
+mundo, para no romper una instalacion al actualizar- y ese es el modo de fallo
+al reves: una errata al escribir el id (una letra O por un cero) dejaba el bot
+ABIERTO en vez de cerrado, y el aviso se perdia entre el resto del arranque.
+Un bot mudo se nota en un minuto; uno abierto puede tardar semanas en notarse,
+y para entonces alguien ha escrito en el diario.
 
 Los no autorizados no reciben respuesta. Es deliberado: contestarles confirma
 que el bot existe y que estan hablando con algo vivo.
@@ -40,18 +43,32 @@ def chats_autorizados() -> list[int]:
     return ids
 
 
-def filtro_autorizado():
-    """Filtro para los CommandHandler, o None si no hay restriccion.
+def chat_autorizado(chat_id: int) -> bool:
+    """Si ese chat puede darle ordenes al bot.
 
-    Devolver None deja pasar a todo el mundo, que es el comportamiento previo.
+    Existe para las vias de entrada que no pasan por un filtro: un
+    callback_query (los botones de /menu) no es un mensaje, asi que
+    `filters.Chat` no lo mira y hay que preguntar a mano. La respuesta tiene
+    que salir de aqui y no de una condicion escrita otra vez, o las dos
+    superficies acaban con reglas distintas.
+    """
+    return chat_id in chats_autorizados()
+
+
+def filtro_autorizado():
+    """Filtro para los CommandHandler. Nunca None: sin ids, no pasa nadie.
+
+    `filters.Chat(chat_id=[])` bloquea a todo el mundo, comprobado contra
+    python-telegram-bot 22.8. Es lo que convierte una errata en el .env en un
+    bot mudo -que se nota enseguida- en vez de en un bot abierto.
     """
     ids = chats_autorizados()
     if not ids:
-        logger.warning(
-            "%s sin configurar: el bot responde a CUALQUIERA que le escriba. "
-            "Pon tu id de chat en el .env para restringirlo.",
+        logger.error(
+            "%s no tiene ni un id valido: el bot NO va a responder a nadie. "
+            "Revisa el .env; si acabas de editarlo, busca una errata en el id.",
             VARIABLE,
         )
-        return None
-    logger.info("Autorizacion activa para %d chat(s)", len(ids))
+    else:
+        logger.info("Autorizacion activa para %d chat(s)", len(ids))
     return filters.Chat(chat_id=ids)

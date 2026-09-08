@@ -69,8 +69,8 @@ cd proyectos/bifrost
    ```
 
    Ese número va en `TELEGRAM_CHAT_ID` y es lo que hace que el bot te
-   responda solo a ti. Sin él responde a cualquiera, y avisa por el log al
-   arrancar.
+   responda solo a ti. **Sin un id válido el bot no responde a nadie** y lo
+   grita por el log al arrancar: cerrado por defecto.
 
 3. **Entorno virtual y dependencias:**
 
@@ -180,7 +180,8 @@ journalctl -u bifrost -n 30 --no-pager
 
 En el arranque debe aparecer `Bot en marcha` y, si tienes puesto el chat_id,
 `Autorizacion activa para 1 chat(s)`. Si en su lugar sale el aviso de que
-responde a cualquiera, te falta `TELEGRAM_CHAT_ID` en el `.env`.
+no te responde a ti, mira el log: si dice «no tiene ni un id valido», el
+`TELEGRAM_CHAT_ID` del `.env` falta o tiene una errata.
 
 ### Comandos del día a día
 
@@ -416,7 +417,15 @@ TELEGRAM_CHAT_ID=123456789,987654321
 Los no autorizados **no reciben respuesta**. Es a propósito: contestarles
 confirma que el bot existe.
 
-Si la variable está vacía, el bot responde a todo el mundo, como antes, y lo
+**Cerrado por defecto.** Si la variable falta, está vacía o no tiene ni un id
+válido, el bot **no responde a nadie** y lo dice con un `ERROR` en el log al
+arrancar. Antes hacía lo contrario —respondía a todo el mundo, para no romper
+una instalación al actualizar— y ese es el modo de fallo al revés: una errata
+al copiar el id (una letra `O` donde va un cero) dejaba el bot **abierto**.
+Un bot mudo se nota en un minuto; uno abierto puede tardar semanas, y para
+entonces alguien ha escrito en el diario.
+
+Lo
 avisa en el log al arrancar. Se dejó así para no romper una instalación al
 actualizar, pero es un aviso, no una opción recomendable: este bot escribe en
 tu diario.

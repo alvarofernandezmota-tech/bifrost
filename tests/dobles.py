@@ -221,10 +221,12 @@ class CasoBot(unittest.TestCase):
             modulo.ruta_de_fecha = lambda fecha: base / f"{fecha}.md"
         self.od = organizar_diario
 
-        # handlers/menu.py comprueba el chat contra TELEGRAM_CHAT_ID. Se deja
-        # vacía para que las pruebas no dependan del entorno de la máquina; la
-        # prueba de la autorización la pone ella misma.
-        self._entorno = mock.patch.dict(os.environ, {"TELEGRAM_CHAT_ID": ""})
+        # handlers/menu.py comprueba el chat contra TELEGRAM_CHAT_ID. Se fija
+        # al chat de las pruebas (el 1, que es el de `Actualizacion`) para que
+        # no dependan del entorno de la máquina. Vacío ya no vale: desde el
+        # 2026-09-08 el bot está cerrado por defecto, así que sin ids no
+        # pasaría nadie y todas las pruebas de botones quedarían mudas.
+        self._entorno = mock.patch.dict(os.environ, {"TELEGRAM_CHAT_ID": "1"})
         self._entorno.start()
         self.addCleanup(self._entorno.stop)
 

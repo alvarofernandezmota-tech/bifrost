@@ -29,7 +29,7 @@ from handlers.hoy import comando_hoy
 from handlers.secciones import comando_aprendo, comando_plan, comando_siento
 from handlers.tarea import comando_tarea, comando_tareas
 from handlers.texto import mensaje_libre
-from utils.auth import chats_autorizados
+from utils.auth import chat_autorizado
 from utils.respuestas import responder
 
 logger = logging.getLogger(__name__)
@@ -73,12 +73,17 @@ def teclado() -> InlineKeyboardMarkup:
 def _autorizado(update: Update) -> bool:
     """El filtro de chat de los CommandHandler no llega a los botones.
 
-    Un callback_query no es un mensaje y `filters.Chat` no lo mira, así que
-    la autorización se comprueba aquí a mano, con la misma lista del .env.
-    Sin lista, como en el resto del bot, pasa todo el mundo.
+    Un `callback_query` **no es un mensaje** y `filters.Chat` no lo mira, así
+    que la autorización de los botones se comprueba aquí a mano. La respuesta
+    sale de `auth.chat_autorizado`, la misma que usan los comandos: si cada
+    superficie escribiera su propia condición, acabarían con reglas distintas
+    y una de las dos abierta sin que nadie se enterase.
+
+    Esa era justamente la versión anterior de esta función —`not ids or …`,
+    o sea, abierta si el `.env` no tenía ids—, que sobrevivió al cambio de
+    «cerrado por defecto» del 2026-09-08 porque vivía en otra rama.
     """
-    ids = chats_autorizados()
-    return not ids or update.effective_chat.id in ids
+    return chat_autorizado(update.effective_chat.id)
 
 
 async def comando_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
