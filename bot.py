@@ -163,7 +163,13 @@ def main() -> None:
 
     # Nunca es None: sin ids validos en el .env, el filtro no deja pasar a
     # nadie y auth.py lo grita por el log. Cerrado por defecto a proposito.
-    autorizado = filtro_autorizado()
+    # `& UpdateType.MESSAGE` deja fuera las ediciones: editar un mensaje ya
+    # enviado NO vuelve a disparar el handler. Sin esto, editar un /diario
+    # para corregir una errata lo apuntaba DOS veces en el diario (y lo subia
+    # a git), y editar un texto suelto reventaba el handler con update.message
+    # None. Se pone aqui, en el filtro que ya comparten todos, para que ningun
+    # handler tenga que acordarse.
+    autorizado = filtro_autorizado() & filters.UpdateType.MESSAGE
 
     app.add_handler(CommandHandler("start", comando_start, filters=autorizado))
     app.add_handler(CommandHandler("help", comando_help, filters=autorizado))
@@ -187,9 +193,9 @@ def main() -> None:
 
     # Antes del texto libre: lo que responde a una pregunta del menu va al
     # handler de esa pregunta. Lo que responde a otra cosa, al diario.
-    respuestas = filters.REPLY & filters.TEXT & ~filters.COMMAND
-    if autorizado:
-        respuestas &= autorizado
+    # `autorizado` ya lleva ~ediciones, asi que una respuesta editada tampoco
+    # se reescribe.
+    respuestas = filters.REPLY & filters.TEXT & ~filters.COMMAND & autorizado
     app.add_handler(MessageHandler(respuestas, respuesta_al_menu))
 
     # El ultimo: cualquier texto que no sea un comando va al diario de hoy.
