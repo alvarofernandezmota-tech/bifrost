@@ -21,6 +21,7 @@ bifrost/
 │ ├─ cita.py # /cita, /agenda → diario/agenda/agenda.py
 │ ├─ habito.py # /habito, /habitos → diario/habitos/habitos.py
 │ ├─ hoy.py # /hoy → leer_entrada + citas + tareas + hábitos
+│ ├─ menu.py # /menu → botones que preguntan y enrutan al handler del comando
 │ └─ texto.py # mensaje sin comando → diario de hoy
 ├─ utils/
 │ ├─ auth.py # autorización por chat_id
@@ -68,8 +69,8 @@ cd proyectos/bifrost
    ```
 
    Ese número va en `TELEGRAM_CHAT_ID` y es lo que hace que el bot te
-   responda solo a ti. Sin él responde a cualquiera, y avisa por el log al
-   arrancar.
+   responda solo a ti. **Sin un id válido el bot no responde a nadie** y lo
+   grita por el log al arrancar: cerrado por defecto.
 
 3. **Entorno virtual y dependencias:**
 
@@ -179,7 +180,8 @@ journalctl -u bifrost -n 30 --no-pager
 
 En el arranque debe aparecer `Bot en marcha` y, si tienes puesto el chat_id,
 `Autorizacion activa para 1 chat(s)`. Si en su lugar sale el aviso de que
-responde a cualquiera, te falta `TELEGRAM_CHAT_ID` en el `.env`.
+no te responde a ti, mira el log: si dice «no tiene ni un id valido», el
+`TELEGRAM_CHAT_ID` del `.env` falta o tiene una errata.
 
 ### Comandos del día a día
 
@@ -333,6 +335,7 @@ ayuda anterior los llevaba y se escribieron tal cual dos veces en el diario.
 | `/habito deporte ayer` · `/habito deporte 2026-09-03` | En otro día, dicho en español o con la fecha | idem |
 | `/habito Beber agua 3 2026-09-03` | Nombre compuesto, valor y fecha | idem |
 | `/habitos` · `/habitos semana` | El día, o la semana con totales y medias | idem |
+| `/menu` | Botones: tocas uno, te pregunta, escribes. Para no teclear el comando | `handlers/menu.py` |
 | `/hoy` · `/hoy ayer` · `/hoy 2026-09-03` | Diario, citas, tareas y hábitos juntos. **Solo lee** | `leer_entrada` + los tres módulos |
 | *(cualquier texto sin comando)* | Se apunta en el diario de hoy, igual que `/diario` | `diario/organizar_diario.py` |
 
@@ -415,7 +418,15 @@ TELEGRAM_CHAT_ID=123456789,987654321
 Los no autorizados **no reciben respuesta**. Es a propósito: contestarles
 confirma que el bot existe.
 
-Si la variable está vacía, el bot responde a todo el mundo, como antes, y lo
+**Cerrado por defecto.** Si la variable falta, está vacía o no tiene ni un id
+válido, el bot **no responde a nadie** y lo dice con un `ERROR` en el log al
+arrancar. Antes hacía lo contrario —respondía a todo el mundo, para no romper
+una instalación al actualizar— y ese es el modo de fallo al revés: una errata
+al copiar el id (una letra `O` donde va un cero) dejaba el bot **abierto**.
+Un bot mudo se nota en un minuto; uno abierto puede tardar semanas, y para
+entonces alguien ha escrito en el diario.
+
+Lo
 avisa en el log al arrancar. Se dejó así para no romper una instalación al
 actualizar, pero es un aviso, no una opción recomendable: este bot escribe en
 tu diario.

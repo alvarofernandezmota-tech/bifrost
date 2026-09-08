@@ -46,6 +46,52 @@ empezarían a escribir en el repo.
 
 ---
 
+## `/menu` — los botones
+
+**Módulo**: `handlers/menu.py` → los handlers de los demás comandos
+
+| Botón | Qué hace |
+|---|---|
+| 📔 Diario · 💬 Me siento · 💡 Aprendo · 🌅 Mañana | pregunta, y lo que escribas va a su sección |
+| 📋 Tarea · 📅 Cita · 🔁 Hábito | pregunta, y lo que escribas es lo que irías detrás del comando |
+| 👁 Hoy · 📋 Tareas · 📅 Agenda · 🔁 Hábitos | se ejecutan al tocarlos |
+
+Existe porque **tocar un comando en el menú «/» de Telegram lo envía tal
+cual**, sin dejar escribir texto detrás: `/siento` llega vacío y el bot
+contesta con la ayuda. No es un fallo nuestro y no tiene arreglo desde ese
+menú.
+
+Cómo va por dentro, en tres pasos:
+
+1. `/menu` manda «¿Qué apuntamos?» con un `InlineKeyboardMarkup`. Cada botón
+   lleva su clave (`siento`, `tarea`…) en el `callback_data`.
+2. Tocar un botón llega como `callback_query`. Los de mirar ejecutan el
+   handler del comando con `context.args = []`. Los de escribir contestan con
+   la pregunta del botón y un `ForceReply`, que **abre la caja de escribir
+   solo** y pone el ejemplo en gris.
+3. Lo que se escriba llega como **respuesta** a esa pregunta
+   (`reply_to_message`). `respuesta_al_menu` mira qué pregunta era, parte el
+   texto en argumentos y llama al handler del comando. Si la respuesta era a
+   cualquier otra cosa, es texto libre y va al diario.
+
+**No hay estado por chat: la pregunta misma es la clave.** Si se contesta a
+una pregunta de hace tres días, se apunta igual. Y como cada botón acaba en el
+mismo handler que su comando, lo que entiende `/tarea` («comprar el pan
+mañana») lo entiende el botón, sin dos caminos que mantener.
+
+Dos cosas que no se ven y hay que saber:
+
+- **El filtro de chat no llega a los botones.** `filters.Chat` mira mensajes y
+  un `callback_query` no lo es, así que `boton()` comprueba la autorización a
+  mano con la misma lista del `.env`. Sin eso, cualquiera con un menú viejo
+  entraría.
+- `respuesta_al_menu` se registra **antes** del texto libre y **después** de
+  los comandos. Si fuera después del texto libre, el texto libre se comería las
+  respuestas; si fuera antes de los comandos, un `/hoy` escrito como respuesta
+  no se ejecutaría.
+
+---
+
 ## `/diario <texto>`
 
 **Módulo**: `handlers/diario.py` → `organizar_texto()` de

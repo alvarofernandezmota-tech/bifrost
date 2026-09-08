@@ -37,6 +37,7 @@ class CasoConFechas(CasoBot):
     def setUp(self):
         super().setUp()
         hoy = datetime.now(fechas.ZONA).date()
+        self.hoy_iso = hoy.isoformat()
         self.ayer = (hoy - timedelta(days=1)).isoformat()
         self.anteayer = (hoy - timedelta(days=2)).isoformat()
         self.manana = (hoy + timedelta(days=1)).isoformat()
@@ -107,7 +108,10 @@ class TestEntradaConElDiaDelante(CasoConFechas):
     def test_el_lunes_es_el_que_ya_paso(self):
         r = self.enviar(comando_entrada, "el", "lunes", "fui", "al", "médico")
         fecha = r.split("del ")[1].split(" ")[0]
-        self.assertLess(fecha, self.ayer)                  # antes de ayer o más
+        # Estrictamente en el pasado. No se compara con `ayer` porque si hoy
+        # es martes, «el lunes» pasado ES ayer y la prueba fallaría por el día
+        # de la semana en que se corra, no por el código.
+        self.assertLess(fecha, self.hoy_iso)
         self.assertEqual(datetime.fromisoformat(fecha).weekday(), 0)
 
     def test_iso_como_siempre(self):
@@ -146,7 +150,7 @@ class TestHabitoConFecha(CasoConFechas):
     def test_el_lunes_es_el_que_ya_paso(self):
         r = self.enviar(comando_habito, "deporte", "el", "lunes")
         fecha = r.split("— ")[1].split(" ")[0]
-        self.assertLess(fecha, self.ayer)
+        self.assertLess(fecha, self.hoy_iso)   # en el pasado, sea cual sea hoy
         self.assertEqual(datetime.fromisoformat(fecha).weekday(), 0)
 
     def test_una_fecha_con_numeros_mal_escrita_avisa_y_no_crea_un_habito_raro(self):
