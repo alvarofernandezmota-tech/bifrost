@@ -52,7 +52,7 @@ que envolverse en `logs_visibles()`, que lo enciende dentro del `with`.
 | `test_hoy.py` | que junta las cuatro partes, que **no escribe nada** y que el recorte no se come el resto |
 | `test_limites.py` | que ningún comando se pase de los 4096 de Telegram: listas enormes, ecos del texto del usuario y el aviso de comando pegado |
 | `test_menu.py` | que el menú de «/» y los `CommandHandler` no se separen; lee `bot.py` con `ast`, sin arrancar el bot |
-| `test_auth.py` | quién puede darle órdenes al bot: cómo se lee `TELEGRAM_CHAT_ID` y que el aviso de «sin restricción» esté ahí |
+| `test_auth.py` | quién puede darle órdenes al bot: cómo se lee `TELEGRAM_CHAT_ID`, y que sin un id válido el bot quede **cerrado** (no abierto) y lo diga con un `ERROR` |
 
 ## Lo que estas pruebas NO dicen
 
