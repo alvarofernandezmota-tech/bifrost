@@ -30,14 +30,21 @@ def breve(mensaje_sincronizar: str) -> str:
     return "subido"
 
 
-async def responder(update, texto: str) -> None:
+async def responder(update, texto: str, reply_markup=None) -> None:
     """Contesta, recortando si no cabe en un mensaje de Telegram.
 
     Se avisa por el log cuando recorta: un recorte silencioso esconde un
     presupuesto mal calculado, y lo que interesa es enterarse.
+
+    `reply_markup` es para el menú de botones (handlers/menu.py): el teclado
+    que va pegado al mensaje, o el ForceReply que abre la caja de escribir.
+
+    Se contesta sobre `effective_message` y no sobre `message` porque al tocar
+    un botón no hay `message`: Telegram manda un callback_query, y el mensaje
+    que hay es el del menú. En un mensaje normal son lo mismo.
     """
     recortado = recortar(texto)
     if recortado is not texto:
         logger.warning("Respuesta recortada: %d → %d unidades UTF-16",
                        longitud(texto), longitud(recortado))
-    await update.message.reply_text(recortado)
+    await update.effective_message.reply_text(recortado, reply_markup=reply_markup)

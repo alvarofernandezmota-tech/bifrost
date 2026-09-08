@@ -17,11 +17,13 @@ import asyncio
 import contextlib
 import io
 import logging
+import os
 import sys
 import tempfile
 import types
 import unittest
 from pathlib import Path
+from unittest import mock
 
 BIFROST = Path(__file__).resolve().parent.parent
 if str(BIFROST) not in sys.path:
@@ -48,6 +50,27 @@ def _instalar_telegram_falso() -> None:
 
     ext.ContextTypes = ContextTypes
     ext.Application = ext.CommandHandler = ext.MessageHandler = object
+    ext.CallbackQueryHandler = object
+
+    # Lo que usa el menú de botones (handlers/menu.py). Guardan lo que se les
+    # pasa y nada más: lo que se prueba es que el bot construye el teclado y
+    # la pregunta que toca, no que Telegram los pinte.
+    class ForceReply:
+        def __init__(self, selective=None, input_field_placeholder=None):
+            self.selective = selective
+            self.input_field_placeholder = input_field_placeholder
+
+    class InlineKeyboardButton:
+        def __init__(self, text, callback_data=None, **kwargs):
+            self.text = text
+            self.callback_data = callback_data
+
+    class InlineKeyboardMarkup:
+        def __init__(self, inline_keyboard):
+            self.inline_keyboard = inline_keyboard
+
+    tg.ForceReply, tg.InlineKeyboardButton = ForceReply, InlineKeyboardButton
+    tg.InlineKeyboardMarkup = InlineKeyboardMarkup
 
     # `filters` era `object`, asi que `filters.Chat` no existia y utils/auth.py
     # ni siquiera se podia importar en las pruebas. Aqui es un modulo de verdad
@@ -104,23 +127,57 @@ class DemasiadoLargo(Exception):
 
 
 class Mensaje:
-    def __init__(self, texto: str = "", entidades=None):
+    def __init__(self, texto: str = "", entidades=None, responde_a=None):
         self.text = texto
         self.entities = entidades or []
+        self.reply_to_message = responde_a
         self.respuestas: list[str] = []
+        self.marcados: list = []  # el reply_markup de cada respuesta; None si no llevaba
 
-    async def reply_text(self, texto: str) -> None:
+    async def reply_text(self, texto: str, reply_markup=None) -> None:
         # Telegram cuenta unidades UTF-16, no caracteres de Python: '📅' es
         # 1 para len() y 2 para Telegram. Un doble que no lo mida así deja
         # pasar mensajes que en producción se rechazan.
         if len(texto.encode("utf-16-le")) // 2 > 4096:
             raise DemasiadoLargo("Message is too long")
         self.respuestas.append(texto)
+        self.marcados.append(reply_markup)
+
+
+class Chat:
+    def __init__(self, id_chat: int):
+        self.id = id_chat
+
+
+class Consulta:
+    """Un callback_query: lo que llega al tocar un botón del menú."""
+
+    def __init__(self, data: str, mensaje: "Mensaje"):
+        self.data = data
+        self.message = mensaje  # el mensaje del menú, que es del bot
+        self.respondida = False
+
+    async def answer(self) -> None:
+        self.respondida = True
 
 
 class Actualizacion:
-    def __init__(self, texto: str = "", entidades=None):
-        self.message = Mensaje(texto, entidades)
+    def __init__(self, texto: str = "", entidades=None, responde_a=None,
+                 boton: str | None = None, chat_id: int = 1):
+        self.effective_chat = Chat(chat_id)
+        if boton is None:
+            self.message = Mensaje(texto, entidades, responde_a)
+            self.callback_query = None
+        else:
+            # Al tocar un botón no hay `message`: Telegram manda un
+            # callback_query cuyo `message` es el del menú. Igual que en la
+            # librería, `effective_message` es el que haya.
+            self.message = None
+            self.callback_query = Consulta(boton, Mensaje())
+
+    @property
+    def effective_message(self) -> "Mensaje":
+        return self.message if self.message is not None else self.callback_query.message
 
 
 class Contexto:
@@ -164,6 +221,15 @@ class CasoBot(unittest.TestCase):
             modulo.ruta_de_fecha = lambda fecha: base / f"{fecha}.md"
         self.od = organizar_diario
 
+        # handlers/menu.py comprueba el chat contra TELEGRAM_CHAT_ID. Se fija
+        # al chat de las pruebas (el 1, que es el de `Actualizacion`) para que
+        # no dependan del entorno de la máquina. Vacío ya no vale: desde el
+        # 2026-09-08 el bot está cerrado por defecto, así que sin ids no
+        # pasaría nadie y todas las pruebas de botones quedarían mudas.
+        self._entorno = mock.patch.dict(os.environ, {"TELEGRAM_CHAT_ID": "1"})
+        self._entorno.start()
+        self.addCleanup(self._entorno.stop)
+
         # sincronizar() haria git commit y git push de verdad. Si algun
         # handler se queda fuera de esta lista, su prueba falla con el aviso
         # de "esta fuera del repo": la red no se toca ni por accidente.
@@ -191,6 +257,30 @@ class CasoBot(unittest.TestCase):
         from handlers.texto import mensaje_libre
         upd = Actualizacion(texto, entidades)
         self._correr(mensaje_libre(upd, None))
+        return upd.message.respuestas[-1] if upd.message.respuestas else ""
+
+    @staticmethod
+    def _contexto_sin_args() -> Contexto:
+        # Un botón o una respuesta no traen argumentos: en la librería
+        # context.args es None, no []. Si un handler hace list(None), aquí
+        # revienta igual que revientaría en producción.
+        ctx = Contexto()
+        ctx.args = None
+        return ctx
+
+    def pulsar(self, boton: str, chat_id: int = 1) -> Actualizacion:
+        """Toca un botón del menú y devuelve la actualización, para mirar
+        qué contestó el bot sobre el mensaje del menú."""
+        from handlers.menu import boton as pulsado
+        upd = Actualizacion(boton=boton, chat_id=chat_id)
+        self._correr(pulsado(upd, self._contexto_sin_args()))
+        return upd
+
+    def contestar(self, pregunta: str, texto: str) -> str:
+        """Responde con `texto` a un mensaje del bot que decía `pregunta`."""
+        from handlers.menu import respuesta_al_menu
+        upd = Actualizacion(texto, responde_a=Mensaje(pregunta))
+        self._correr(respuesta_al_menu(upd, self._contexto_sin_args()))
         return upd.message.respuestas[-1] if upd.message.respuestas else ""
 
     def seccion(self, titulo: str, ruta: Path | None = None) -> str:

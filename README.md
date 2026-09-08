@@ -21,6 +21,7 @@ bifrost/
 │ ├─ cita.py # /cita, /agenda → diario/agenda/agenda.py
 │ ├─ habito.py # /habito, /habitos → diario/habitos/habitos.py
 │ ├─ hoy.py # /hoy → leer_entrada + citas + tareas + hábitos
+│ ├─ menu.py # /menu → botones que preguntan y enrutan al handler del comando
 │ └─ texto.py # mensaje sin comando → diario de hoy
 ├─ utils/
 │ ├─ auth.py # autorización por chat_id
@@ -333,6 +334,7 @@ ayuda anterior los llevaba y se escribieron tal cual dos veces en el diario.
 | `/habito deporte 2026-09-03` | En otro día | idem |
 | `/habito Beber agua 3 2026-09-03` | Nombre compuesto, valor y fecha | idem |
 | `/habitos` · `/habitos semana` | El día, o la semana con totales y medias | idem |
+| `/menu` | Botones: tocas uno, te pregunta, escribes. Para no teclear el comando | `handlers/menu.py` |
 | `/hoy` · `/hoy 2026-09-03` | Diario, citas, tareas y hábitos juntos. **Solo lee** | `leer_entrada` + los tres módulos |
 | *(cualquier texto sin comando)* | Se apunta en el diario de hoy, igual que `/diario` | `diario/organizar_diario.py` |
 

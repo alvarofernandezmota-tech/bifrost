@@ -53,6 +53,7 @@ que envolverse en `logs_visibles()`, que lo enciende dentro del `with`.
 | `test_limites.py` | que ningún comando se pase de los 4096 de Telegram: listas enormes, ecos del texto del usuario y el aviso de comando pegado |
 | `test_menu.py` | que el menú de «/» y los `CommandHandler` no se separen; lee `bot.py` con `ast`, sin arrancar el bot |
 | `test_auth.py` | quién puede darle órdenes al bot: cómo se lee `TELEGRAM_CHAT_ID`, y que sin un id válido el bot quede **cerrado** (no abierto) y lo diga con un `ERROR` |
+| `test_botones.py` | el menú de botones entero: el teclado, la pregunta de cada botón, que la respuesta acabe **donde su comando**, y que un chat no autorizado no reciba nada |
 
 ## Lo que estas pruebas NO dicen
 
