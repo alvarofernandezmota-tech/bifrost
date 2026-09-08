@@ -315,7 +315,8 @@ ayuda anterior los llevaba y se escribieron tal cual dos veces en el diario.
 | `/start` | Bienvenida con los comandos del día a día | — |
 | `/help` | Ayuda completa | — |
 | `/diario hoy he dormido fatal` | Añade el texto a la entrada de **hoy** | `diario/organizar_diario.py` |
-| `/entrada 2026-09-03 se me olvidó esto` | Lo mismo en **ese día** | `diario/bifrost_bridge.py` |
+| `/diario cené con mi hermana ayer` | Con «ayer» al final, a la entrada de **ayer**. Solo el pasado: «tengo examen mañana» se queda en hoy | idem |
+| `/entrada ayer se me olvidó esto` · `/entrada 2026-09-03 …` | Lo mismo en **ese día**: ayer, antes de ayer, el lunes (el que pasó), hace 3 días o la fecha | `diario/bifrost_bridge.py` |
 | `/siento contento, he dormido bien` | A **«Cómo me siento»**, con la hora | `diario/organizar_diario.py` |
 | `/aprendo lo de filters.COMMAND` | A **«Avances / aprendizajes»**, como viñeta | idem |
 | `/plan seguir con el portfolio` | A **«Para mañana»**, como viñeta | idem |
@@ -331,11 +332,11 @@ ayuda anterior los llevaba y se escribieron tal cual dos veces en el diario.
 | `/habito deporte` · `/habito no meditar` | Apunta un hábito de hoy | `diario/habitos/habitos.py` |
 | `/habito Leer Libro` | El nombre puede llevar espacios | idem |
 | `/habito energia 7` | Un valor del 1 al 10 | idem |
-| `/habito deporte 2026-09-03` | En otro día | idem |
+| `/habito deporte ayer` · `/habito deporte 2026-09-03` | En otro día, dicho en español o con la fecha | idem |
 | `/habito Beber agua 3 2026-09-03` | Nombre compuesto, valor y fecha | idem |
 | `/habitos` · `/habitos semana` | El día, o la semana con totales y medias | idem |
 | `/menu` | Botones: tocas uno, te pregunta, escribes. Para no teclear el comando | `handlers/menu.py` |
-| `/hoy` · `/hoy 2026-09-03` | Diario, citas, tareas y hábitos juntos. **Solo lee** | `leer_entrada` + los tres módulos |
+| `/hoy` · `/hoy ayer` · `/hoy 2026-09-03` | Diario, citas, tareas y hábitos juntos. **Solo lee** | `leer_entrada` + los tres módulos |
 | *(cualquier texto sin comando)* | Se apunta en el diario de hoy, igual que `/diario` | `diario/organizar_diario.py` |
 
 Los dos primeros, y el texto suelto, escriben dentro de la sección "Qué ha

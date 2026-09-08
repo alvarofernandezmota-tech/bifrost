@@ -18,6 +18,7 @@ from telegram.ext import ContextTypes
 from utils.midgaror import modulo
 from utils.respuestas import breve, responder
 
+fechas = modulo("fechas")
 organizar_texto = modulo("organizar_diario").organizar_texto
 sincronizar = modulo("sincronizar").sincronizar
 
@@ -41,14 +42,19 @@ async def _escribir(update: Update, context: ContextTypes.DEFAULT_TYPE, comando:
         await responder(update, 
             f"❌ Escribe el texto detrás del comando, sin < ni >:\n{ejemplo}")
         return
+    # «cené con mi hermana ayer» va al día de ayer, sin el «ayer». Solo el
+    # pasado sin ambigüedad cuenta (fechas.fecha_detras): «tengo examen
+    # mañana» es una frase de hoy y se queda entera.
+    texto, fecha = fechas.fecha_detras(texto)
     try:
-        ruta = organizar_texto(texto, seccion=seccion)
+        ruta = organizar_texto(texto, seccion=seccion, fecha=fecha)
         # sincronizar() hace git commit y git push: hasta 90 s con mala red.
         # Dentro de una corrutina eso congela el bot entero para todos los
         # chats, no solo para quien mando el mensaje. to_thread lo saca del
         # hilo del bucle de eventos, que sigue atendiendo lo demas.
         subido = breve(await asyncio.to_thread(sincronizar, ruta))
-        await responder(update, f"{confirmacion} · {subido}")
+        cuando = f" del {fecha}" if fecha else ""
+        await responder(update, f"{confirmacion}{cuando} · {subido}")
     except ValueError as e:
         await responder(update, f"⚠️ {e}")
     except Exception as e:
