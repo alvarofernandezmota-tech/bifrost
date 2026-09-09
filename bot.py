@@ -20,7 +20,7 @@ from handlers.secciones import comando_aprendo, comando_plan, comando_siento
 from handlers.tarea import comando_tarea, comando_tareas
 from handlers.texto import mensaje_libre
 from utils.auth import filtro_autorizado
-from utils.respuestas import responder
+from utils.respuestas import responder, responder_si_puedo
 
 # Cargar variables de entorno
 load_dotenv()
@@ -153,6 +153,29 @@ async def comando_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     )
 
 
+async def error_no_atrapado(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """La ultima red: lo que se escape de un handler acaba aqui, no en el vacio.
+
+    Sin esto, una excepcion que sale de un handler se queda en un aviso de la
+    libreria ("No error handlers are registered") y el usuario no se entera de
+    nada. El caso real, comprobado con python-telegram-bot 22.8: el reply falla
+    por red, el except del handler lo reintenta, falla otra vez y la excepcion
+    sale; el texto ya estaba escrito Y subido a GitHub, y al chat no llegaba
+    ni un error. Ahora al menos queda en el log con su traza y, si se puede,
+    se avisa.
+
+    El aviso va por responder_si_puedo: si lo que falla es justo mandar
+    mensajes, intentarlo aqui otra vez solo repetiria el problema.
+
+    No se dice QUE ha fallado: si es un fallo interno, el texto de la
+    excepcion no le sirve al usuario y puede llevar rutas del servidor.
+    """
+    logger.error("Error sin atrapar procesando %r", update, exc_info=context.error)
+    if isinstance(update, Update) and update.effective_message is not None:
+        await responder_si_puedo(
+            update, "❌ Algo ha fallado por dentro. Ha quedado en el log; vuelve a intentarlo.")
+
+
 def main() -> None:
     """Inicia el bot de Telegram."""
     if not TOKEN:
@@ -202,6 +225,9 @@ def main() -> None:
     # El ultimo: cualquier texto que no sea un comando va al diario de hoy.
     solo_texto = filters.TEXT & ~filters.COMMAND & autorizado
     app.add_handler(MessageHandler(solo_texto, mensaje_libre))
+
+    # El ultimo de la cadena: lo que no atrape ningun handler.
+    app.add_error_handler(error_no_atrapado)
 
     logger.info("🤖 Bot en marcha. Escuchando comandos...")
     app.run_polling(allowed_updates=Update.ALL_TYPES)

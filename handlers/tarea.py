@@ -12,7 +12,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from utils.midgaror import modulo
-from utils.respuestas import breve, responder
+from utils.respuestas import breve, responder, responder_si_puedo
 
 tareas = modulo("tareas")
 sincronizar = modulo("sincronizar").sincronizar
@@ -88,7 +88,7 @@ async def comando_tarea(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         await responder(update, f"⚠️ {e}")
     except Exception as e:
         logger.exception("Error en /tarea")
-        await responder(update, f"❌ Error: {e}")
+        await responder_si_puedo(update, f"❌ Error: {e}")
 
 
 async def comando_tareas(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -97,4 +97,4 @@ async def comando_tareas(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         await responder(update, tareas.resumen())
     except Exception as e:
         logger.exception("Error en /tareas")
-        await responder(update, f"❌ Error: {e}")
+        await responder_si_puedo(update, f"❌ Error: {e}")

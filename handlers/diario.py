@@ -7,7 +7,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from utils.midgaror import modulo
-from utils.respuestas import breve, dia, responder
+from utils.respuestas import breve, dia, responder, responder_si_puedo
 
 fechas = modulo("fechas")
 organizar_texto = modulo("organizar_diario").organizar_texto
@@ -39,4 +39,4 @@ async def comando_diario(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         await responder(update, f"📔 Apuntado en el diario {dia(fecha)} · {subido}")
     except Exception as e:
         logger.exception("Error escribiendo en el diario de hoy")
-        await responder(update, f"❌ Error: {e}")
+        await responder_si_puedo(update, f"❌ Error: {e}")
