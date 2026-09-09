@@ -12,7 +12,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from utils.midgaror import modulo
-from utils.respuestas import responder
+from utils.respuestas import responder, responder_si_puedo
 
 agenda = modulo("agenda")
 fechas = modulo("fechas")
@@ -47,4 +47,4 @@ async def comando_hoy(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         await responder(update, f"⚠️ {e}")
     except Exception as e:
         logger.exception("Error en /hoy")
-        await responder(update, f"❌ Error: {e}")
+        await responder_si_puedo(update, f"❌ Error: {e}")

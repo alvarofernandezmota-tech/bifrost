@@ -17,7 +17,7 @@ from telegram.ext import ContextTypes
 
 from utils.mensajes import texto_tras_comando
 from utils.midgaror import modulo
-from utils.respuestas import breve, responder
+from utils.respuestas import breve, responder, responder_si_puedo
 
 fechas = modulo("fechas")
 organizar_texto = modulo("organizar_diario").organizar_texto
@@ -60,7 +60,7 @@ async def _escribir(update: Update, context: ContextTypes.DEFAULT_TYPE, comando:
         await responder(update, f"⚠️ {e}")
     except Exception as e:
         logger.exception("Error escribiendo en la sección %s", seccion)
-        await responder(update, f"❌ Error: {e}")
+        await responder_si_puedo(update, f"❌ Error: {e}")
 
 
 async def comando_siento(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

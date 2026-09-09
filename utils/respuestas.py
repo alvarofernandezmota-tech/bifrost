@@ -53,3 +53,26 @@ async def responder(update, texto: str, reply_markup=None) -> None:
         logger.warning("Respuesta recortada: %d → %d unidades UTF-16",
                        longitud(texto), longitud(recortado))
     await update.effective_message.reply_text(recortado, reply_markup=reply_markup)
+
+
+async def responder_si_puedo(update, texto: str, reply_markup=None) -> None:
+    """Como `responder`, pero no revienta si Telegram no coge el mensaje.
+
+    Es para el camino de error, y por eso existe: los `except` de los handlers
+    llamaban a `responder`, que es lo que acababa de fallar. Si el reply falla
+    por red, el except vuelve a intentarlo, vuelve a fallar, y la excepción
+    sale del handler. Sin error handler eso terminaba en «No error handlers
+    are registered»: el texto se había escrito y subido a GitHub, y al usuario
+    no le llegaba nada.
+
+    Aquí el fallo del reply se queda en el log. Perder el aviso es malo;
+    perder además la excepción original y la confirmación es peor.
+
+    En el camino normal se sigue usando `responder`: si ahí falla el envío,
+    interesa que se note.
+    """
+    try:
+        await responder(update, texto, reply_markup)
+    except Exception:
+        logger.exception("No se pudo avisar al chat (el aviso se pierde, no lo escrito): %r",
+                         texto[:80])

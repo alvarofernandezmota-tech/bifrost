@@ -8,7 +8,7 @@ from telegram.ext import ContextTypes
 
 from utils.mensajes import texto_tras_comando
 from utils.midgaror import modulo
-from utils.respuestas import breve, responder
+from utils.respuestas import breve, responder, responder_si_puedo
 
 fechas = modulo("fechas")
 escribir_entrada = modulo("bifrost_bridge").escribir_entrada
@@ -45,4 +45,4 @@ async def comando_entrada(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         await responder(update, f"📔 Apuntado en el diario del {fecha} · {subido}")
     except Exception as e:
         logger.exception("Error escribiendo la entrada del %s", fecha)
-        await responder(update, f"❌ Error: {e}")
+        await responder_si_puedo(update, f"❌ Error: {e}")

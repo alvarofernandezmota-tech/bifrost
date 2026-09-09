@@ -11,7 +11,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from utils.midgaror import modulo
-from utils.respuestas import breve, responder
+from utils.respuestas import breve, responder, responder_si_puedo
 
 fechas = modulo("fechas")
 habitos = modulo("habitos")
@@ -94,7 +94,7 @@ async def comando_habito(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         await responder(update, f"⚠️ {e}")
     except Exception as e:
         logger.exception("Error en /habito")
-        await responder(update, f"❌ Error: {e}")
+        await responder_si_puedo(update, f"❌ Error: {e}")
 
 
 async def comando_habitos(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -111,4 +111,4 @@ async def comando_habitos(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         await responder(update, f"⚠️ {e}")
     except Exception as e:
         logger.exception("Error en /habitos")
-        await responder(update, f"❌ Error: {e}")
+        await responder_si_puedo(update, f"❌ Error: {e}")

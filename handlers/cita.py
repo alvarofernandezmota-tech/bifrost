@@ -12,7 +12,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from utils.midgaror import modulo
-from utils.respuestas import breve, responder
+from utils.respuestas import breve, responder, responder_si_puedo
 
 agenda = modulo("agenda")
 sincronizar = modulo("sincronizar").sincronizar
@@ -76,7 +76,7 @@ async def comando_cita(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         await responder(update, f"⚠️ {e}")
     except Exception as e:
         logger.exception("Error en /cita")
-        await responder(update, f"❌ Error: {e}")
+        await responder_si_puedo(update, f"❌ Error: {e}")
 
 
 async def comando_agenda(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -93,4 +93,4 @@ async def comando_agenda(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         await responder(update, f"⚠️ {e}")
     except Exception as e:
         logger.exception("Error en /agenda")
-        await responder(update, f"❌ Error: {e}")
+        await responder_si_puedo(update, f"❌ Error: {e}")
