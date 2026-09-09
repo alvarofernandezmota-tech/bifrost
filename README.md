@@ -4,9 +4,16 @@ Bot de Telegram para escribir y organizar entradas del diario personal.
 
 ## Estado
 
-✅ **Bot funcional** - Arranca y responde comandos
-✅ **`/entrada` arreglado** (2026-09-04)
-⚠️ **Pendiente** - Prueba real contra Telegram, servicio systemd en Madre y autorización por chat_id
+✅ **En producción** — corre como servicio de systemd en Madre y escribe
+entradas reales del diario desde Telegram (la primera, el 2026-09-08).
+✅ **Autorización por chat_id** — cerrada por defecto: sin un id válido en el
+`.env` el bot no le responde a nadie y lo dice con ERROR en el journal.
+✅ **Sobrevive a un arranque sin red** — reintenta en vez de morir, y la
+unidad no tiene tope de reinicios.
+
+Como está vivo y escribiendo en el diario de verdad, lo de aquí abajo no es
+teoría: arrancar una segunda instancia a mano **rompe la que está corriendo**
+(ver «Uso diario»).
 
 ## Estructura del repositorio
 
@@ -106,15 +113,19 @@ cd proyectos/bifrost
 
    Si esto falla, el problema está en midgaror, no en el bot.
 
-6. **Arrancar el bot en primer plano:**
+6. **Arrancar el bot en primer plano.** Si el servicio está vivo en esta
+   máquina, **párralo antes**: dos instancias con el mismo token se pelean por
+   los mensajes y Telegram devuelve `409 Conflict` a las dos.
 
    ```bash
+   sudo systemctl stop bifrost     # si el servicio está instalado aquí
    cd proyectos/bifrost
    source venv/bin/activate
    python3 bot.py
    ```
 
-   Los mensajes de arranque salen por pantalla. Se para con `Ctrl+C`.
+   Los mensajes de arranque salen por pantalla. Se para con `Ctrl+C`, y el
+   servicio se vuelve a levantar con `sudo systemctl start bifrost`.
 
 7. **Probar desde Telegram**, en este orden:
 
@@ -130,16 +141,30 @@ cd proyectos/bifrost
 8. **Comprobar y guardar lo escrito**, desde la raíz de midgaror:
 
    ```bash
-   git status diario/personal/
-   git diff diario/personal/
+   git log -1 --stat
    ```
 
-   El bot escribe ficheros, no commitea. El commit lo haces tú.
+   El bot escribe, commitea y sube él solo (`diario/sincronizar.py`), así que
+   lo que hay que mirar es el último commit, no el working tree: si el push
+   falló, la respuesta del bot lo dice («⚠️ commiteado en local, sin subir»).
 
 ## Uso diario
 
+El bot corre como servicio: no hay que arrancarlo a mano.
+
 ```bash
-cd ~/GitHub/personal/midgaror/proyectos/bifrost
+systemctl status bifrost           # ¿está vivo?
+journalctl -u bifrost -f           # ver qué hace, en vivo
+sudo systemctl restart bifrost     # tras cambiar código o .env
+```
+
+Para arrancarlo a mano (depurar), **para antes el servicio**: dos instancias
+con el mismo token se pelean por los mensajes y Telegram devuelve `409
+Conflict` a las dos.
+
+```bash
+sudo systemctl stop bifrost
+cd ~/GitHub/personal/midgaror-bot/proyectos/bifrost
 source venv/bin/activate
 python3 bot.py
 ```
@@ -194,8 +219,11 @@ journalctl -u bifrost -f           # ver el log en vivo
 ### Qué hace la unidad
 
 - **Se reinicia siempre** que el proceso termine, salga limpio o no. Solo
-  `systemctl stop` lo deja parado. Con un tope de 5 reinicios en 5 minutos,
-  para que un error de configuración no entre en bucle.
+  `systemctl stop` lo deja parado. **Sin tope de reinicios**
+  (`StartLimitIntervalSec=0`): el fallo probable al arrancar no es un bot roto
+  sino que la red aún no está, y con el tope de antes cinco intentos se
+  gastaban en ~50 s y la unidad quedaba en `failed` para siempre. Un error de
+  configuración de verdad lo corta `bot.py` saliendo, no el tope.
 - **El token no pasa por systemd.** Lo sigue leyendo `python-dotenv` del
   `.env`, así que no aparece en `systemctl show` ni en el volcado de la
   unidad.
@@ -205,18 +233,27 @@ journalctl -u bifrost -f           # ver el log en vivo
 
 ### Dónde vive y qué toca
 
+Todo lo del servicio vive en **`midgaror-bot`**, la copia que es solo del bot
+y está siempre en `main`. La copia de trabajo (`midgaror/`) no corre el
+servicio: es donde editas.
+
 | Cosa | Dónde |
 |------|-------|
-| Código | `~/GitHub/personal/midgaror/proyectos/bifrost/` |
+| Código | `~/GitHub/personal/midgaror-bot/proyectos/bifrost/` |
 | Entorno virtual | `proyectos/bifrost/venv/` |
 | Token y chat_id | `proyectos/bifrost/.env` (nunca se commitea) |
 | Unidad | `/etc/systemd/system/bifrost.service` |
-| Lo que escribe | `~/GitHub/personal/midgaror/diario/personal/AAAA/MM-mes/AAAA-MM-DD.md` |
+| Lo que escribe | `~/GitHub/personal/midgaror-bot/diario/personal/AAAA/MM-mes/AAAA-MM-DD.md` |
 | Logs | `journalctl -u bifrost` |
-| Lógica del diario | `~/GitHub/personal/midgaror/diario/` (no está en este repo) |
+| Lógica del diario | `~/GitHub/personal/midgaror-bot/diario/` (no está en este repo) |
 
-El bot **escribe ficheros, no hace commit**. Las entradas viven en el disco
-de Madre hasta que alguien las commitea a mano.
+El bot **escribe, commitea y sube** él solo, con `diario/sincronizar.py`: una
+entrada mandada desde Telegram está en GitHub en segundos. Por eso el permiso
+de escritura tiene que cubrir el repo entero y no solo `diario/personal/` —
+git escribe en `.git/`, que está en la raíz.
+
+Cuando el push falla (sin red), la respuesta del bot lo dice en claro:
+«⚠️ commiteado en local, sin subir». El commit está hecho; falta el push.
 
 ### Comprobar que no se muere
 
