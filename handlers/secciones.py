@@ -15,6 +15,7 @@ import logging
 from telegram import Update
 from telegram.ext import ContextTypes
 
+from utils.mensajes import texto_tras_comando
 from utils.midgaror import modulo
 from utils.respuestas import breve, responder, responder_si_puedo
 
@@ -37,7 +38,7 @@ DESTINOS = {
 
 async def _escribir(update: Update, context: ContextTypes.DEFAULT_TYPE, comando: str) -> None:
     seccion, confirmacion, ejemplo = DESTINOS[comando]
-    texto = " ".join(context.args)
+    texto = texto_tras_comando(update)
     if not texto.strip():
         await responder(update, 
             f"❌ Escribe el texto detrás del comando, sin < ni >:\n{ejemplo}")

@@ -261,8 +261,19 @@ class CasoBot(unittest.TestCase):
 
     def enviar(self, handler, *args: str) -> str:
         """Manda un comando con sus argumentos y devuelve lo que contesta."""
-        upd = Actualizacion()
-        self._correr(handler(upd, Contexto(*args)))
+        return self.enviar_texto(handler, " ".join(("/comando",) + args))
+
+    def enviar_texto(self, handler, texto: str) -> str:
+        """Manda el mensaje entero tal y como lo escribiria el usuario.
+
+        El texto del mensaje y `context.args` salen de la MISMA cadena, y los
+        args se parten como los parte la libreria (por cualquier hueco, saltos
+        de linea incluidos). Antes el doble mandaba un mensaje vacio y unos
+        args inventados aparte, y por eso ninguna prueba podia ver que los
+        handlers aplastaban los saltos de linea: no habia ninguno que aplastar.
+        """
+        upd = Actualizacion(texto)
+        self._correr(handler(upd, Contexto(*texto.split()[1:])))
         return upd.message.respuestas[-1] if upd.message.respuestas else ""
 
     def texto_libre(self, texto: str, entidades=None) -> str:

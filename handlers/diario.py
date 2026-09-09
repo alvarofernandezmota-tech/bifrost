@@ -6,6 +6,7 @@ import logging
 from telegram import Update
 from telegram.ext import ContextTypes
 
+from utils.mensajes import texto_tras_comando
 from utils.midgaror import modulo
 from utils.respuestas import breve, dia, responder, responder_si_puedo
 
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 async def comando_diario(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Comando /diario."""
-    texto = " ".join(context.args)
+    texto = texto_tras_comando(update)
     if not texto:
         await responder(update, 
             "❌ Escribe el texto detrás del comando, sin < ni >:\n"
