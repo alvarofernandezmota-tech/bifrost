@@ -34,6 +34,25 @@ def comandos_registrados() -> list[str]:
     return nombres
 
 
+def _llamadas(nombre_funcion: str) -> list[ast.Call]:
+    """Las llamadas a `nombre_funcion(...)` que hay en bot.py."""
+    arbol = ast.parse(BOT_PY.read_text(encoding="utf-8"))
+    return [n for n in ast.walk(arbol)
+            if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)
+            and n.func.id == nombre_funcion]
+
+
+def _lleva_filtro_autorizado(llamada: ast.Call) -> bool:
+    """Si la llamada pasa `filters=autorizado`.
+
+    Se mira en el fuente y no en el objeto montado a proposito: lo que hay
+    que impedir es que alguien BORRE el `filters=` y no se entere nadie.
+    """
+    return any(k.arg == "filters" and isinstance(k.value, ast.Name)
+               and k.value.id == "autorizado"
+               for k in llamada.keywords)
+
+
 class TestMenu(unittest.TestCase):
     def setUp(self):
         self.menu = [comando for comando, _ in bot.MENU]
@@ -76,6 +95,49 @@ class TestMenu(unittest.TestCase):
         ayuda = inspect.getsource(bot.comando_help)
         olvidados = [c for c in self.menu if c != "help" and f"/{c}" not in ayuda]
         self.assertEqual(olvidados, [], "en el menú pero sin explicar en /help")
+
+
+
+class TestLaPuertaEstaCerrada(unittest.TestCase):
+    """La autorizacion es la unica barrera entre un desconocido y un git push.
+
+    Hasta el 2026-09-09 no la vigilaba ninguna prueba: quitar `filters=
+    autorizado` de los 15 comandos y del texto libre dejaba las 175 pruebas y
+    `ruff` en verde. Hoy bot.py esta bien cableado; lo que falta es que una
+    regresion no pase en verde, porque el precio de esa regresion es que
+    cualquiera escriba en el diario de Alvaro y lo suba a GitHub.
+    """
+
+    def test_todos_los_comandos_van_con_filters_autorizado(self):
+        sin_filtro = [llamada.args[0].value for llamada in _llamadas("CommandHandler")
+                      if not _lleva_filtro_autorizado(llamada)]
+        self.assertEqual(sin_filtro, [],
+                         "estos comandos los puede usar cualquiera: les falta filters=autorizado")
+
+    def test_hay_un_handler_de_comando_por_cada_comando_registrado(self):
+        # Que la lista de arriba no este vacia por haberse quedado sin mirar.
+        self.assertGreaterEqual(len(_llamadas("CommandHandler")), 15)
+
+    def test_los_dos_handlers_de_texto_tambien_van_filtrados(self):
+        # El texto suelto y las respuestas al menu escriben en el diario igual
+        # que /diario: si pasan sin filtro, la puerta esta abierta por ahi.
+        mensajes = _llamadas("MessageHandler")
+        self.assertEqual(len(mensajes), 2, "han cambiado los MessageHandler: revisa esta prueba")
+        fuente = BOT_PY.read_text(encoding="utf-8")
+        for nombre in ("respuestas", "solo_texto"):
+            with self.subTest(filtro=nombre):
+                linea = next(ln for ln in fuente.splitlines()
+                             if ln.strip().startswith(f"{nombre} = "))
+                self.assertIn("autorizado", linea,
+                              f"el filtro {nombre} ya no exige autorizacion")
+
+    def test_autorizado_deja_fuera_las_ediciones(self):
+        # Lo del PR #24: sin UpdateType.MESSAGE, editar un /diario lo apuntaba
+        # dos veces. Va en la misma linea que la autorizacion, asi que se
+        # vigila aqui.
+        fuente = BOT_PY.read_text(encoding="utf-8")
+        linea = next(ln for ln in fuente.splitlines() if ln.strip().startswith("autorizado = "))
+        self.assertIn("UpdateType.MESSAGE", linea)
 
 
 if __name__ == "__main__":
