@@ -32,9 +32,10 @@ MIDGAROR = Path(__file__).resolve().parent.parent.parent.parent
 DIARIO = MIDGAROR / "diario"
 
 # `diario/` para diario.py, organizar_diario, sincronizar, bifrost_bridge y
-# almacen; las tres subcarpetas porque tareas.py, habitos.py y agenda.py se
-# importan por su nombre a secas.
-CARPETAS = (DIARIO, DIARIO / "tareas", DIARIO / "habitos", DIARIO / "agenda")
+# almacen; las subcarpetas porque tareas.py, habitos.py, agenda.py y
+# registro.py se importan por su nombre a secas.
+CARPETAS = (DIARIO, DIARIO / "tareas", DIARIO / "habitos", DIARIO / "agenda",
+            DIARIO / "registro")
 
 for _carpeta in CARPETAS:
     _ruta = str(_carpeta)

@@ -10,6 +10,7 @@ from telegram.ext import (Application, CallbackQueryHandler, CommandHandler, Con
                           MessageHandler, filters)
 
 # Importar handlers
+from handlers.apunte import comando_apunte, comando_dia, comando_semana
 from handlers.cita import comando_agenda, comando_cita
 from handlers.diario import comando_diario
 from handlers.entrada import comando_entrada
@@ -58,6 +59,9 @@ MENU = [
     ("agenda", "Tus citas de hoy o de la semana"),
     ("habito", "Apunta un hábito, o su valor del 1 al 10"),
     ("habitos", "Tus hábitos de hoy o de la semana"),
+    ("apunte", "Apunta cuánto de algo: /apunte tele 3h"),
+    ("dia", "Lo apuntado hoy, contra tus objetivos"),
+    ("semana", "La semana entera, de lunes a domingo"),
     ("help", "Cómo se usa cada comando"),
 ]
 
@@ -143,6 +147,19 @@ async def comando_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "/habito deporte 2026-09-03  o con la fecha entera\n"
         "/habitos                  los de hoy\n"
         "/habitos semana           la semana, con totales y medias\n\n"
+        "APUNTES (cuánto de algo)\n"
+        "Un apunte es un evento, no una casilla: dos ratos de tele son dos\n"
+        "apuntes y se suman al leer, no se pisan.\n"
+        "/apunte deporte           hecho, sin más\n"
+        "/apunte tele 3h           con cantidad y unidad\n"
+        "/apunte agua 1,5 l        la unidad puede ir separada\n"
+        "/apunte ver la tele 2h    el nombre puede llevar espacios\n"
+        "/apunte tele 1h ayer      en otro día, dicho en español\n"
+        "/dia                      lo apuntado hoy, contra tus objetivos\n"
+        "/dia ayer                 el de otro día\n"
+        "/semana                   la semana entera, de lunes a domingo\n"
+        "Si algo tiene objetivo, sale comparado: «al menos 3» o «como mucho 7».\n"
+        "La dirección la pone el objetivo, no el nombre de la cosa.\n\n"
         "SIN COMANDO\n"
         "Escribe y ya: cualquier mensaje suelto se apunta en el diario de hoy,\n"
         "igual que /diario.\n\n"
@@ -210,6 +227,9 @@ def main() -> None:
     app.add_handler(CommandHandler("habito", comando_habito, filters=autorizado))
     app.add_handler(CommandHandler("habitos", comando_habitos, filters=autorizado))
     app.add_handler(CommandHandler("hoy", comando_hoy, filters=autorizado))
+    app.add_handler(CommandHandler("apunte", comando_apunte, filters=autorizado))
+    app.add_handler(CommandHandler("dia", comando_dia, filters=autorizado))
+    app.add_handler(CommandHandler("semana", comando_semana, filters=autorizado))
 
     # Los botones de /menu. El filtro de chat no vale para un callback_query:
     # la autorizacion la comprueba el propio handler.

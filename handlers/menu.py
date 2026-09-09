@@ -22,6 +22,7 @@ import logging
 from telegram import ForceReply, InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
+from handlers.apunte import comando_apunte, comando_dia, comando_semana
 from handlers.cita import comando_agenda, comando_cita
 from handlers.diario import comando_diario
 from handlers.habito import comando_habito, comando_habitos
@@ -48,18 +49,23 @@ ACCIONES = {
               "comprar el pan mañana"),
     "cita": ("📅 Cita", "📅 ¿Qué cita, y cuándo?", comando_cita, "médico mañana a las 10"),
     "habito": ("🔁 Hábito", "🔁 ¿Qué hábito?", comando_habito, "deporte · no meditar · energia 7"),
+    "apunte": ("📝 Apunte", "📝 ¿Qué apuntas? Con cuánto, si lo tiene", comando_apunte,
+               "tele 3h · agua 1,5 l · deporte"),
     "hoy": ("👁 Hoy", None, comando_hoy, None),
     "tareas": ("📋 Tareas", None, comando_tareas, None),
     "agenda": ("📅 Agenda", None, comando_agenda, None),
     "habitos": ("🔁 Hábitos", None, comando_habitos, None),
+    "dia": ("📊 Día", None, comando_dia, None),
+    "semana": ("📆 Semana", None, comando_semana, None),
 }
 
 # Cómo se reparten en el teclado: primero lo que escribe, debajo lo que mira.
 FILAS = (
     ("diario", "siento"),
     ("aprendo", "plan"),
-    ("tarea", "cita", "habito"),
+    ("tarea", "cita", "habito", "apunte"),
     ("hoy", "tareas", "agenda", "habitos"),
+    ("dia", "semana"),
 )
 
 

@@ -210,7 +210,9 @@ class CasoBot(unittest.TestCase):
         import habitos
         import organizar_diario
         import tareas
-        from handlers import cita, diario, entrada, habito, secciones, tarea, texto
+        import registro
+        from handlers import (apunte, cita, diario, entrada, habito, secciones,
+                              tarea, texto)
 
         self._tmp = tempfile.TemporaryDirectory()
         base = Path(self._tmp.name)
@@ -219,7 +221,11 @@ class CasoBot(unittest.TestCase):
         tareas.RUTA_DATOS = base / "tareas.json"
         agenda.RUTA_DATOS = base / "agenda.json"
         habitos.RUTA_DATOS = base / "habitos.json"
+        # registro guarda en dos ficheros: los apuntes y los objetivos.
+        registro.RUTA_DATOS = base / "registro.json"
+        registro.RUTA_OBJETIVOS = base / "objetivos.json"
         self.tareas, self.agenda, self.habitos = tareas, agenda, habitos
+        self.registro = registro
 
         # La entrada del día, desde la plantilla real: si la plantilla cambia
         # y rompe las secciones, estas pruebas lo dicen.
@@ -246,7 +252,7 @@ class CasoBot(unittest.TestCase):
         # sincronizar() haria git commit y git push de verdad. Si algun
         # handler se queda fuera de esta lista, su prueba falla con el aviso
         # de "esta fuera del repo": la red no se toca ni por accidente.
-        for modulo in (cita, diario, entrada, habito, secciones, tarea, texto):
+        for modulo in (apunte, cita, diario, entrada, habito, secciones, tarea, texto):
             modulo.sincronizar = lambda *a, **k: "escrito y subido a GitHub"
 
     def tearDown(self):
