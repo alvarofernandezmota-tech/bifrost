@@ -55,6 +55,8 @@ empezarían a escribir en el repo.
 | 📔 Diario · 💬 Me siento · 💡 Aprendo · 🌅 Mañana | pregunta, y lo que escribas va a su sección |
 | 📋 Tarea · 📅 Cita · 🔁 Hábito | pregunta, y lo que escribas es lo que irías detrás del comando |
 | 👁 Hoy · 📋 Tareas · 📅 Agenda · 🔁 Hábitos | se ejecutan al tocarlos |
+| 📝 Apunte | pregunta, y lo que escribas es lo que iría detrás de `/apunte` |
+| 📊 Día · 📆 Semana | se ejecutan al tocarlos |
 
 Existe porque **tocar un comando en el menú «/» de Telegram lo envía tal
 cual**, sin dejar escribir texto detrás: `/siento` llega vacío y el bot
@@ -222,6 +224,55 @@ El efecto secundario, a propósito: una fecha mal escrita que no tenga forma de
 fecha (`/habito deporte ayer`) ya no da error, se convierte en parte del
 nombre (`deporte-ayer`). Es el precio de admitir nombres de varias palabras, y
 sale barato: el hábito raro se ve en `/habitos` del mismo día.
+
+---
+
+## `/apunte`, `/dia` y `/semana`
+
+**Módulo**: `handlers/apunte.py` → `midgaror/diario/registro/registro.py`
+
+El modelo del [ADR-012](https://github.com/alvarofernandezmota-tech/midgaror/blob/main/docs/adr/012-modelo-de-registro-diario.md).
+Un **apunte** es un evento, no una casilla: `tele 3h`, `deporte`, `agua 1,5l`.
+
+| Mensaje | Qué hace |
+|---|---|
+| `/apunte deporte` | hecho, sin cantidad |
+| `/apunte tele 3h` | cantidad y unidad pegadas |
+| `/apunte agua 1,5 l` | o separadas |
+| `/apunte ver la tele 2h` | el nombre puede llevar espacios |
+| `/apunte tele 1h ayer` | en otro día, dicho en español |
+| `/dia` · `/dia ayer` | lo apuntado ese día, contra sus objetivos |
+| `/semana` · `/semana el lunes` | la semana natural de ese día, de lunes a domingo |
+
+Tres reglas que vienen del ADR y que conviene no perder de vista:
+
+- **Varios apuntes del mismo día se suman al leer**, no se pisan. Dos ratos de
+  tele son dos apuntes; el total lo calcula `/dia`.
+- **Los totales no se guardan.** En disco solo hay apuntes; `/dia` y `/semana`
+  son informes que se calculan al mostrar (apartado 6).
+- **La dirección la pone el objetivo, no el nombre.** `ejercicio` es «al menos
+  3 h/semana» y `tele` es «como mucho 7 h/semana». El programa no clasifica
+  nada como bueno o malo.
+
+Eso último se ve en cómo se pinta: el icono sale del **objetivo**, no de la
+cosa. Un `al_menos` sin cumplir es ⏳ («te falta»), no ❌; un `como_mucho`
+pasado sí es ❌; cumplido es ✅ en los dos casos. Sin objetivo no hay icono de
+juicio, solo el dato: `· tele 5 h`.
+
+El mensaje se lee **por descarte**, igual que `/habito` y por el mismo motivo
+—el nombre puede llevar espacios y Telegram entrega los argumentos ya
+partidos—: primero la fecha desde el final, luego la cantidad (`3h`, `1,5l`,
+`30min`, o el número y la unidad sueltos), y lo que sobra es el nombre.
+Siempre queda al menos una palabra de nombre, así que `/apunte 7` apunta una
+cosa llamada «7» y no un valor suelto sin nada a lo que pegarse.
+
+La semana es la **natural**, de lunes a domingo, y no los siete días
+anteriores a hoy: un objetivo de «3 h/semana» se cuenta sobre una semana del
+calendario, que es la que uno tiene en la cabeza al mirarlo un miércoles.
+
+Lo que **no** hay todavía: fijar objetivos desde Telegram. `fijar_objetivo()`
+existe en el módulo pero no tiene comando, así que hoy los objetivos se ponen
+a mano en `diario/registro/datos/objetivos.json`.
 
 ---
 

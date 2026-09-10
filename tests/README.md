@@ -54,6 +54,10 @@ que envolverse en `logs_visibles()`, que lo enciende dentro del `with`.
 | `test_menu.py` | que el menú de «/» y los `CommandHandler` no se separen; lee `bot.py` con `ast`, sin arrancar el bot |
 | `test_auth.py` | quién puede darle órdenes al bot: cómo se lee `TELEGRAM_CHAT_ID`, y que sin un id válido el bot quede **cerrado** (no abierto) y lo diga con un `ERROR` |
 | `test_botones.py` | el menú de botones entero: el teclado, la pregunta de cada botón, que la respuesta acabe **donde su comando**, y que un chat no autorizado no reciba nada |
+| `test_apunte.py` | `/apunte`, `/dia` y `/semana`: cómo se lee la cantidad, que dos apuntes del día **no se pisan**, y que el icono sale del objetivo y no del nombre |
+| `test_ediciones.py` | que editar un mensaje ya enviado **no vuelve a ejecutar** el handler; con la librería real, no con el doble |
+| `test_errores.py` | que un fallo no acabe en silencio: el error handler, y que el aviso de error no reviente si es justo el envío lo que falla |
+| `test_arranque.py` | que un arranque sin red reintente en vez de morir, y que un token inválido no se reintente |
 | `test_fechas_handlers.py` | «ayer», «antes de ayer», «el lunes» en cada comando; y que en el diario **solo el pasado al final** cambia de día («tengo examen mañana» se queda en hoy) |
 
 ## Lo que estas pruebas NO dicen
