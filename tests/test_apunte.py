@@ -16,12 +16,22 @@ from dobles import CasoBot  # noqa: E402  (instala el telegram falso)
 
 from handlers.apunte import (comando_apunte, comando_dia,  # noqa: E402
                              comando_semana, pintar)
+from utils.midgaror import modulo  # noqa: E402
+
+fechas = modulo("fechas")
 
 # El doble fija en 2026-09-05 la ENTRADA del diario, pero registro.py resuelve
-# «hoy» con date.today() de verdad: son dos cosas distintas y conviene no
-# confundirlas. Estas pruebas van contra el día real.
-HOY = date.today().isoformat()
-LUNES = date.today() - timedelta(days=date.today().weekday())
+# «hoy» de verdad: son dos cosas distintas y conviene no confundirlas. Estas
+# pruebas van contra el día real.
+#
+# Y ese «hoy» es el de `Europe/Madrid`, no el del reloj de la máquina. Antes
+# esto era `date.today()` y en Madre daba igual —está en esa zona—, pero en
+# una máquina en UTC estas pruebas fallaban **dos horas cada noche**: entre
+# las 22:00 y las 00:00 UTC ya es el día siguiente en Madrid, así que «ayer»
+# caía en el mismo día que el `date.today()` del sistema. Pasó el 2026-09-10,
+# y lo que destapó fue real: el modelo y `fechas.py` usaban dos relojes.
+HOY = fechas.hoy()
+LUNES = date.fromisoformat(HOY) - timedelta(days=date.fromisoformat(HOY).weekday())
 DOMINGO = LUNES + timedelta(days=6)
 
 
