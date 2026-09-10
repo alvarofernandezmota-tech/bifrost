@@ -54,14 +54,25 @@ Bifrost es un bot de Telegram que permite escribir entradas del diario personal 
 ## Relación con midgaror
 
 - `bifrost` es submódulo de `midgaror`
-- Importa scripts de `midgaror/diario/`
-- Escribe en `midgaror/diario/personal/`
+- Importa scripts de `midgaror/diario/`, y solo por `utils/midgaror.py`
+- Escribe en dos sitios de midgaror:
+  - `diario/personal/` — las entradas del diario (`/diario`, `/entrada`, las
+    secciones y el texto suelto)
+  - los JSON de los cuatro modelos — `tareas.json`, `agenda.json`,
+    `habitos.json` y `registro/datos/` (`/tarea`, `/cita`, `/habito`, `/apunte`)
+- **Commitea y sube él solo** lo que escribe, con `diario/sincronizar.py`
+- El servicio corre desde `midgaror-bot`, una copia del repo que es solo del
+  bot y está siempre en `main`, no desde la copia de trabajo (ADR-013)
 
 ## Estado actual
 
-✅ Bot funcional y probado contra Telegram (2026-09-04)
-✅ Documentación completa
-✅ `/entrada` arreglado
-✅ Autorización por chat_id (`utils/auth.py`)
-✅ Unidad de systemd escrita (`systemd/bifrost.service`)
-⚠️ Pendiente: instalarla en Madre y usar el bot 1-2 semanas (fase 2b)
+✅ **En producción**: corre como servicio de systemd en Madre y escribe
+entradas reales del diario desde Telegram (la primera, el 2026-09-08)
+✅ 18 comandos, 10 handlers, 179 pruebas
+✅ Autorización por chat_id, **cerrada por defecto** (`utils/auth.py`), y con
+pruebas que impiden que abrir la puerta pase en verde
+✅ Sobrevive a un arranque sin red y a que le editen un mensaje
+✅ Un fallo no acaba en silencio: hay error handler (2026-09-09)
+⚠️ Pendiente: usarlo 1-2 semanas y decidir con el uso (fase 2b). Y la CI no
+arranca desde el 2026-09-05 por facturación: `scripts/verificar.py` en local
+es la única verificación real
