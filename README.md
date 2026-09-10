@@ -417,7 +417,7 @@ Telegram no contesta, se registra el fallo y el bot arranca igual.
 python3 -m unittest discover -s tests
 ```
 
-55 pruebas de los handlers, en menos de un décimo de segundo, sin red y sin
+179 pruebas de los handlers, en menos de tres segundos, sin red y sin
 Telegram instalado: `tests/dobles.py` pone un `telegram` de mentira y un
 diario en un temporal. Detalle en [`tests/README.md`](tests/README.md).
 

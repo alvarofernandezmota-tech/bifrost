@@ -1,4 +1,4 @@
-# bifrost solo se puede lintar por su cuenta: sus 55 pruebas importan
+# bifrost solo se puede lintar por su cuenta: sus 179 pruebas importan
 # midgaror/diario/ subiendo dos niveles desde tests/, asi que necesitan el
 # repo padre y se ejecutan en la CI de midgaror (.github/workflows/pruebas.yml).
 name: Lint
