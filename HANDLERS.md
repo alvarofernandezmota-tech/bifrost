@@ -314,6 +314,31 @@ crearla, y no sube nada. Si el mensaje entero no cabe, lo recorta
 
 ---
 
+## `/start` y `/help`
+
+**Módulo**: `bot.py` — son los dos únicos comandos que no tienen handler
+propio, porque no tocan el diario ni ningún modelo: solo contestan texto.
+
+| Mensaje | Qué hace |
+|---|---|
+| `/start` | el saludo de bienvenida, lo que Telegram manda al abrir el chat |
+| `/help` | la ayuda entera, comando por comando, con ejemplos literales |
+
+`/start` **no va en `MENU`** a propósito: Telegram ya lo ofrece solo al abrir
+la conversación, y repetirlo en la lista de «/» solo gasta un hueco. Es la
+única excepción, y `tests/test_menu.py` la tiene escrita como tal
+(`FUERA_DEL_MENU`), para que la prueba que exige que todo lo de `MENU` tenga
+handler no la cuente como un olvido.
+
+`/help` sí está en `MENU`, y hay una prueba que exige que **cada botón del
+menú tenga su comando explicado ahí** (`test_botones.py`). Es la que cazó que
+faltaba `/apunte` cuando se añadió.
+
+Los dos van con `filters=autorizado`, como el resto: la ayuda no se le enseña
+a quien no puede usar el bot.
+
+---
+
 ## El menú de comandos
 
 `bot.py` publica la lista `MENU` con `setMyCommands` al arrancar
