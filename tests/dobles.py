@@ -235,9 +235,15 @@ class CasoBot(unittest.TestCase):
         self.entrada.write_text(plantilla.replace("{{FECHA}}", self.hoy), encoding="utf-8")
 
         import bifrost_bridge
+        # `crear` es del diario: con crear=False la ruta se calcula y no se
+        # toca el disco, que es lo que usa leer_entrada para cumplir su
+        # promesa de que leer nunca escribe. El doble lo acepta e ignora
+        # —aqui la carpeta ya existe—, pero tiene que aceptarlo: un doble con
+        # una firma distinta de la real deja pasar en verde lo que en
+        # produccion revienta con TypeError.
         for modulo in (organizar_diario, bifrost_bridge):
-            modulo.ruta_de_hoy = lambda: self.entrada
-            modulo.ruta_de_fecha = lambda fecha: base / f"{fecha}.md"
+            modulo.ruta_de_hoy = lambda crear=True: self.entrada
+            modulo.ruta_de_fecha = lambda fecha, crear=True: base / f"{fecha}.md"
         self.od = organizar_diario
 
         # handlers/menu.py comprueba el chat contra TELEGRAM_CHAT_ID. Se fija
