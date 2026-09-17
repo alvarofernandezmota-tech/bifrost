@@ -65,3 +65,33 @@ class TestLoQueSeDeclara(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestLaPlantillaDelEnv(unittest.TestCase):
+    """.env.example tiene que nombrar TODAS las variables que el bot lee.
+
+    Hasta el 2026-09-18 documentaba dos y el codigo leia cuatro. La que
+    faltaba era `ANTHROPIC_API_KEY`, que es justo la que enciende que el bot
+    entienda lo que le escribes — y la mas facil de olvidar, porque sin ella
+    no falla nada: simplemente no pasa nada.
+    """
+
+    def variables_de_la_plantilla(self) -> set:
+        texto = (RAIZ / ".env.example").read_text(encoding="utf-8")
+        return {ln.split("=")[0].strip() for ln in texto.splitlines()
+                if "=" in ln and not ln.strip().startswith("#")}
+
+    def test_estan_las_dos_obligatorias(self):
+        for variable in ("TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"):
+            with self.subTest(variable=variable):
+                self.assertIn(variable, self.variables_de_la_plantilla())
+
+    def test_esta_la_que_enciende_entender(self):
+        self.assertIn("ANTHROPIC_API_KEY", self.variables_de_la_plantilla())
+
+    def test_la_plantilla_no_lleva_ningun_valor_de_verdad(self):
+        # Una plantilla con una clave dentro es una clave publicada.
+        texto = (RAIZ / ".env.example").read_text(encoding="utf-8")
+        for pista in ("sk-ant-", "sk-or-v1-", ":AA"):
+            with self.subTest(pista=pista):
+                self.assertNotIn(pista, texto)
