@@ -27,3 +27,12 @@ python-dotenv==1.2.3
 # quede instalada y probar un mensaje suelto de verdad, igual que con las
 # de arriba.
 anthropic==1.6.0
+
+# Para utils/voz.py (notas de voz por Telegram, con Whisper en local). Mismo
+# trato: el import de `faster_whisper` está DENTRO de la función que lo usa,
+# así que sin esto instalado el bot arranca igual y las notas de voz fallan
+# con un aviso claro en vez de tirar el bot. Arrastra `ctranslate2` (unos
+# cientos de MB) y descarga el modelo `small` (~500 MB) la primera vez que
+# se use. También hace falta `ffmpeg` como paquete del sistema —eso no lo
+# instala pip— para poder leer el .oga que manda Telegram.
+faster-whisper==1.1.1

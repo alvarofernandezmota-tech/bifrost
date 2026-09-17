@@ -117,21 +117,17 @@ async def _enrutar(update: Update, e) -> None:
         raise ValueError(f"intención sin manejar: {e.intencion!r}")
 
 
-async def mensaje_libre(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Cualquier texto que no sea un comando: se entiende, o al diario de hoy."""
-    texto = (update.effective_message.text or "").strip()
-    if not texto:
-        return
-    if texto.startswith("/"):
-        # Un comando de verdad no llega aquí: lo habría cogido su CommandHandler.
-        # Si llega, es que Telegram no lo marcó como comando, y meterlo en el
-        # diario sería tragárselo en silencio. Se avisa y se devuelve el texto
-        # para poder reenviarlo sin volver a escribirlo.
-        logger.warning("Texto que parece comando y no lo es (entidades: %s): %r",
-                       [e.type for e in (update.effective_message.entities or [])], texto[:80])
-        await responder(update, AVISO_COMANDO.format(texto=texto))
-        return
+async def procesar(update: Update, texto: str) -> None:
+    """Un texto ya en mano —escrito, o dictado y transcrito—: se entiende, o
+    al diario de hoy.
 
+    Esto es lo que comparten `mensaje_libre` (texto suelto) y `mensaje_voz`
+    (una nota de voz ya pasada por Whisper, en `handlers/voz.py`): a partir
+    de aquí da igual de dónde salió el texto, es el mismo mensaje suelto de
+    siempre y pasa por el mismo camino. `mensaje_libre` sigue siendo quien
+    filtra lo que empieza por «/» —una transcripción nunca puede empezar por
+    ahí de casualidad, así que `mensaje_voz` no repite ese aviso.
+    """
     entendido = entender.entender(texto, preguntar=_preguntar)
     if entendido is not None:
         try:
@@ -155,3 +151,20 @@ async def mensaje_libre(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     except Exception as e:
         logger.exception("Error escribiendo un mensaje suelto en el diario")
         await responder_si_puedo(update, f"❌ Error: {e}")
+
+
+async def mensaje_libre(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Cualquier texto que no sea un comando: se entiende, o al diario de hoy."""
+    texto = (update.effective_message.text or "").strip()
+    if not texto:
+        return
+    if texto.startswith("/"):
+        # Un comando de verdad no llega aquí: lo habría cogido su CommandHandler.
+        # Si llega, es que Telegram no lo marcó como comando, y meterlo en el
+        # diario sería tragárselo en silencio. Se avisa y se devuelve el texto
+        # para poder reenviarlo sin volver a escribirlo.
+        logger.warning("Texto que parece comando y no lo es (entidades: %s): %r",
+                       [e.type for e in (update.effective_message.entities or [])], texto[:80])
+        await responder(update, AVISO_COMANDO.format(texto=texto))
+        return
+    await procesar(update, texto)
