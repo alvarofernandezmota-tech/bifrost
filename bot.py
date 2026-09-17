@@ -18,6 +18,7 @@ from handlers.habito import comando_habito, comando_habitos
 from handlers.hoy import comando_hoy
 from handlers.menu import boton, comando_menu, respuesta_al_menu
 from handlers.recordatorios import arrancar as arrancar_recordatorios
+from handlers.recordatorios import parar as parar_recordatorios
 from handlers.secciones import comando_aprendo, comando_plan, comando_siento
 from handlers.tarea import comando_tarea, comando_tareas
 from handlers.texto import mensaje_libre
@@ -94,6 +95,15 @@ async def al_arrancar(app: Application) -> None:
         arrancar_recordatorios(app)
     except Exception:
         logger.exception("No se pudieron arrancar los recordatorios; el bot sigue")
+
+
+async def al_parar(app: Application) -> None:
+    """Lo que hay que recoger al apagar: el bucle de recordatorios.
+
+    Sin esto, la tarea se queda a medio `sleep` y asyncio lo grita al
+    cerrarse con un ERROR en el log de cada reinicio.
+    """
+    await parar_recordatorios(app)
 
 
 async def comando_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -221,7 +231,7 @@ def main() -> None:
         raise ValueError("TELEGRAM_BOT_TOKEN no encontrado en .env")
 
     logger.info("✅ Iniciando bot de Telegram...")
-    app = Application.builder().token(TOKEN).post_init(al_arrancar).build()
+    app = Application.builder().token(TOKEN).post_init(al_arrancar).post_shutdown(al_parar).build()
 
     # Nunca es None: sin ids validos en el .env, el filtro no deja pasar a
     # nadie y auth.py lo grita por el log. Cerrado por defecto a proposito.

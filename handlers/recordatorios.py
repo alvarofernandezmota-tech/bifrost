@@ -92,8 +92,41 @@ async def bucle(app: Application) -> None:
         await avisar_una_vez(app)
 
 
+# La tarea del bucle, guardada aquí a propósito y no solo devuelta.
+#
+# `asyncio.create_task` NO guarda una referencia fuerte a la tarea: si quien
+# la crea tira la suya, el recolector de basura puede llevársela a media
+# ejecución y el bucle desaparece sin un solo aviso. Está en la
+# documentación de asyncio con esas palabras («save a reference»), y aquí
+# pasaba: `bot.py` llamaba a `arrancar(app)` y no guardaba nada.
+_tarea: asyncio.Task | None = None
+
+
 def arrancar(app: Application) -> asyncio.Task:
     """Deja el bucle corriendo junto al bot. Devuelve la tarea, para pruebas."""
+    global _tarea
     logger.info("⏰ Recordatorios en marcha (cada %ds, ventana de %d min)",
                 CADA_SEGUNDOS, recordatorios.VENTANA_MINUTOS)
-    return asyncio.create_task(bucle(app))
+    _tarea = asyncio.create_task(bucle(app), name="recordatorios")
+    return _tarea
+
+
+async def parar(app: Application | None = None) -> None:
+    """Cancela el bucle al apagar el bot. Se engancha en post_shutdown.
+
+    Sin esto, apagar el bot deja la tarea a medio `sleep` y asyncio lo grita
+    al cerrarse: «Task was destroyed but it is pending!». No rompía nada
+    —el proceso se iba igual— pero un ERROR en el log en cada reinicio es
+    exactamente lo que enseña a no leer los logs. Visto en Madre el
+    2026-09-17, en el primer arranque con recordatorios.
+    """
+    global _tarea
+    if _tarea is None:
+        return
+    _tarea.cancel()
+    try:
+        await _tarea
+    except asyncio.CancelledError:
+        pass       # es lo que pedimos al cancelar, no un fallo
+    finally:
+        _tarea = None
