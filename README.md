@@ -30,11 +30,15 @@ bifrost/
 │ ├─ hoy.py # /hoy → leer_entrada + citas + tareas + hábitos
 │ ├─ apunte.py # /apunte, /dia, /semana → diario/registro/registro.py
 │ ├─ menu.py # /menu → botones que preguntan y enrutan al handler del comando
-│ └─ texto.py # mensaje sin comando → diario de hoy
+│ ├─ texto.py # mensaje sin comando → entender() y, si no, diario de hoy
+│ ├─ voz.py # nota de voz → Whisper → el mismo camino que el texto
+│ └─ recordatorios.py # avisa de una cita sin que nadie pregunte (ADR-020)
 ├─ utils/
 │ ├─ auth.py # autorización por chat_id
+│ ├─ limites.py # el tope de 4096 de Telegram, contado como lo cuenta Telegram
 │ ├─ midgaror.py # dónde está midgaror y cómo se importan sus módulos
-│ └─ respuestas.py # cómo se contesta: breve si va bien, entero si falla
+│ ├─ respuestas.py # cómo se contesta: breve si va bien, entero si falla
+│ └─ voz.py # Whisper en local: audio → texto
 ├─ venv/ # Entorno virtual (NO commitear)
 ├─ .env # Token y chat_id (NO commitear)
 ├─ .env.example # Plantilla
