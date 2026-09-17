@@ -1,5 +1,33 @@
 # Scripts de Bifrost
 
+## estado.sh
+
+¿Cómo está el bot? Todo lo que hace falta saber, en una palabra:
+
+```bash
+./estado.sh
+```
+
+Dice: si el servicio vive (y si no, las últimas líneas del log), en qué commit
+corre, qué variables hay en el `.env`, si cada paquete **importa de verdad**, y
+si el cerebro (`entender()`) y la voz están encendidos o dormidos.
+
+Tres decisiones que no son estilo:
+
+- **Imprime nombres de variables, nunca valores.** Un diagnóstico que hay que
+  censurar antes de enseñarlo no se enseña, y entonces no sirve de nada. Este
+  se puede pegar entero en un chat.
+- **Avisa de las líneas que `dotenv` no va a entender.** El 2026-09-18 el bot
+  se cayó porque una `x` y unos espacios se colaron delante de
+  `TELEGRAM_BOT_TOKEN` al pasar por un editor, y el error solo decía «no
+  encontrado».
+- **Prueba a importar, y cada uno en su propio proceso.** `pip` decía
+  «Successfully installed faster-whisper» mientras el import moría por una
+  dependencia sin declarar; y un paquete compilado que no cuadra con el Python
+  de la máquina no lanza una excepción, **mata al intérprete** — con los cuatro
+  en el mismo proceso, el primero que revienta deja la comprobación muda justo
+  cuando más falta hace.
+
 ## bot.py
 
 Punto de entrada del bot. Inicia la aplicación de Telegram y registra handlers.
