@@ -50,6 +50,16 @@ class TestApunte(CasoBot):
         self.assertEqual(self.apuntes()[0], {"fecha": HOY, "que": "tele",
                                              "valor": 3, "unidad": "h"})
 
+    def test_la_confirmacion_dice_la_cantidad_no_un_error(self):
+        # Bug real: `_cantidad()` está pensada para una línea de RESUMEN
+        # (trae `total`), y se llamaba con el apunte recién creado (trae
+        # `valor`, no `total`). El dato se guardaba bien —lo comprueba
+        # `test_cantidad_y_unidad_pegadas`, que solo mira el JSON— pero la
+        # respuesta al chat moría con «❌ Error: 'total'» en cuanto el
+        # apunte llevaba cantidad, que es el caso normal.
+        respuesta = self.enviar(comando_apunte, "tele", "3h")
+        self.assertEqual(respuesta, f"📝 tele 3 h — {HOY} · subido")
+
     def test_cantidad_y_unidad_separadas(self):
         self.enviar(comando_apunte, "agua", "1,5", "l")
         apunte = self.apuntes()[0]

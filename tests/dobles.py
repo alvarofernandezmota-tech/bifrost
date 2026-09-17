@@ -261,6 +261,13 @@ class CasoBot(unittest.TestCase):
         for modulo in (apunte, cita, diario, entrada, habito, secciones, tarea, texto):
             modulo.sincronizar = lambda *a, **k: "escrito y subido a GitHub"
 
+        # texto.py pregunta a entender() antes de ir al diario. Sin clave en
+        # el entorno de pruebas ya devuelve None por su cuenta, pero
+        # `_preguntar` es el mismo punto de inyección que usan las pruebas
+        # de entender.py: aquí se deja limpio en cada prueba para que una
+        # que lo ponga no manche a la siguiente, sea cual sea el orden.
+        texto._preguntar = None
+
     def tearDown(self):
         self._tmp.cleanup()
 
