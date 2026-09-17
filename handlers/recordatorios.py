@@ -23,6 +23,7 @@ import logging
 
 from telegram.ext import Application
 
+from handlers.voz import soltar_si_esta_ocioso as soltar_voz_si_esta_ociosa
 from utils.auth import chats_autorizados
 from utils.limites import recortar
 from utils.midgaror import modulo
@@ -90,6 +91,10 @@ async def bucle(app: Application) -> None:
     while True:
         await asyncio.sleep(CADA_SEGUNDOS)
         await avisar_una_vez(app)
+        # De paso, el mantenimiento que necesita un latido: soltar el modelo
+        # de voz cuando lleva rato sin usarse (casi un giga de memoria).
+        # Vive aquí porque este es el único bucle que late en el bot.
+        soltar_voz_si_esta_ociosa()
 
 
 # La tarea del bucle, guardada aquí a propósito y no solo devuelta.

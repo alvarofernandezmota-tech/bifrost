@@ -22,6 +22,7 @@ encima haga lo correcto con lo que oye.
 """
 
 import sys
+import time
 from pathlib import Path
 from typing import Protocol
 
@@ -32,6 +33,19 @@ IDIOMA = "es"
 # `small` es el equilibrio razonable en una máquina sin GPU: mismo modelo que
 # usa gjallarhorn, medido ya contra el hardware de Madre en telefono/voz.py.
 MODELO_POR_DEFECTO = "small"
+
+# Cuánto se queda el modelo en memoria después de usarlo.
+#
+# Medido en Madre el 2026-09-18: el bot pasó de **47 MB** a **968 MB** en
+# cuanto transcribió la primera nota de voz. Ese casi giga se quedaba puesto
+# para siempre, porque `_cargar()` guardaba el motor y no lo soltaba nunca.
+#
+# Para un bot al que le mandas una nota de vez en cuando, tener un giga
+# ocupado el 99 % del tiempo es un mal cambio, sobre todo en una máquina que
+# corre más cosas. Diez minutos deja encadenar varias notas seguidas sin
+# recargar, y devuelve la memoria cuando se acaba la conversación. El precio
+# es que la primera nota después de un rato tarda unos segundos más.
+MINUTOS_EN_MEMORIA = 10
 
 
 class Transcriptor(Protocol):
@@ -54,6 +68,10 @@ class Whisper:
         self.modelo = modelo
         self.idioma = idioma
         self._motor = None
+        # `monotonic` y no la hora del reloj: esto mide cuánto ha pasado, y
+        # un cambio de hora del sistema no puede dejar el modelo pegado en
+        # memoria ni soltarlo antes de tiempo.
+        self._ultimo_uso = None
 
     def _cargar(self):
         if self._motor is None:
@@ -100,8 +118,42 @@ class Whisper:
     def transcribir(self, audio: Path) -> str:
         if not audio.exists():
             raise FileNotFoundError(f"no existe el audio: {audio}")
-        segmentos, _ = self._cargar().transcribe(str(audio), language=self.idioma)
-        return " ".join(s.text.strip() for s in segmentos).strip()
+        motor = self._cargar()
+        self._ultimo_uso = time.monotonic()
+        try:
+            segmentos, _ = motor.transcribe(str(audio), language=self.idioma)
+            return " ".join(s.text.strip() for s in segmentos).strip()
+        finally:
+            # También al terminar: una nota larga no puede contar como
+            # «ociosa desde que empezó».
+            self._ultimo_uso = time.monotonic()
+
+    def soltar(self) -> bool:
+        """Suelta el modelo. `True` si había algo que soltar.
+
+        Quien esté transcribiendo ahora mismo no se entera: ya tiene su
+        propia referencia al motor, y Python no se lo lleva hasta que
+        termine. Aquí solo se suelta la nuestra.
+        """
+        if self._motor is None:
+            return False
+        self._motor = None
+        self._ultimo_uso = None
+        return True
+
+    def ocioso_desde_hace(self, ahora: float | None = None) -> float | None:
+        """Segundos sin usarse, o `None` si no hay nada cargado."""
+        if self._motor is None or self._ultimo_uso is None:
+            return None
+        return (time.monotonic() if ahora is None else ahora) - self._ultimo_uso
+
+    def soltar_si_lleva_ocioso(self, minutos: float = MINUTOS_EN_MEMORIA,
+                               ahora: float | None = None) -> bool:
+        """Suelta el modelo si lleva `minutos` sin usarse. `True` si lo soltó."""
+        ocioso = self.ocioso_desde_hace(ahora)
+        if ocioso is None or ocioso < minutos * 60:
+            return False
+        return self.soltar()
 
 
 class TranscriptorFalso:
