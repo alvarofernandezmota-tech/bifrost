@@ -80,9 +80,32 @@ def _partir(args: list[str]) -> tuple[str, str | None, str | None, str | None]:
 
 
 def _cantidad(linea: dict) -> str:
-    """«3 h», «1,5 l», o el número a secas si no hay unidad."""
+    """«3 h», «1,5 l», o el número a secas si no hay unidad.
+
+    Para una LÍNEA DE RESUMEN (`registro.resumen_dia`/`resumen_semana`), que
+    trae el total ya sumado en `total`. Un apunte recién creado no tiene esa
+    clave —tiene `valor`—: para ese caso está `cuanto()`, abajo.
+    """
     unidad = f" {linea['unidad']}" if linea.get("unidad") else ""
     return f"{linea['total']}{unidad}"
+
+
+def cuanto(apunte: dict) -> str:
+    """« 3h», « 1,5 l», o cadena vacía si el apunte no lleva valor.
+
+    Para confirmar el apunte que se acaba de crear, no una línea de resumen:
+    `registro.apuntar()` devuelve `valor`/`unidad`, nunca `total`. Usar
+    `_cantidad()` aquí —como hacía este módulo hasta ahora— revienta con
+    `KeyError: 'total'` en cuanto el apunte lleva un valor, que es el caso
+    más normal («/apunte agua 1,5 l»): el dato se guardaba bien, pero la
+    confirmación moría con «❌ Error: 'total'» en vez de decir lo que se
+    apuntó. No lo cogía ninguna prueba porque `test_apunte.py` comprueba el
+    JSON escrito, no el texto de la respuesta.
+    """
+    if "valor" not in apunte:
+        return ""
+    unidad = f" {apunte['unidad']}" if apunte.get("unidad") else ""
+    return f" {apunte['valor']}{unidad}"
 
 
 def pintar(resumen: dict, cabecera: str) -> str:
@@ -125,8 +148,7 @@ async def comando_apunte(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         # hilo del bucle de eventos, que sigue atendiendo lo demas.
         subido = breve(await asyncio.to_thread(
             sincronizar, registro.RUTA_DATOS, "diario: apuntes desde bifrost"))
-        cuanto = f" {_cantidad(apunte)}" if "valor" in apunte else ""
-        await responder(update, f"📝 {apunte['que']}{cuanto} — {apunte['fecha']} · {subido}")
+        await responder(update, f"📝 {apunte['que']}{cuanto(apunte)} — {apunte['fecha']} · {subido}")
     except ValueError as e:
         await responder(update, f"⚠️ {e}")
     except Exception as e:

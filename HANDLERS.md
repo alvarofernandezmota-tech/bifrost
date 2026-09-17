@@ -115,7 +115,8 @@ Lo mismo, en el día que se diga. Crea la entrada si no existe.
 
 ## *(texto sin comando)*
 
-**Módulo**: `handlers/texto.py` → lo mismo que `/diario`
+**Módulo**: `handlers/texto.py` → primero `diario/entender.py`; si no dice
+nada, lo mismo que `/diario`
 
 Se registra **el último** en `bot.py`, con `filters.TEXT & ~filters.COMMAND`,
 así que los comandos mandan. Escribir sin comando es lo normal: es como se usa
@@ -127,6 +128,15 @@ código llega marcado como `code` y cae aquí. Por eso el handler rechaza todo
 lo que empiece por `/` con un aviso, y lo devuelve para poder reenviarlo. La
 alternativa —escribirlo en el diario— es tragarse un comando en silencio, que
 es lo que pasó el 2026-09-05 treinta veces seguidas.
+
+Antes de ir al diario, se le pregunta a `entender()` si en realidad es una
+tarea, un hábito, una cita o un apunte. Con alta confianza, va a la misma
+función que su comando —`tareas.agregar`, `agenda.agregar`, `habitos.marcar`,
+`registro.apuntar`— y contesta con la misma confirmación que daría ese
+comando. Con cualquier duda, sin `ANTHROPIC_API_KEY` puesta, o si la propia
+frase es un diario de verdad, cae aquí abajo exactamente como siempre: esto
+no puede hacer que un mensaje se pierda, en el peor caso dejar de reconocer
+algo que antes tampoco reconocía nadie.
 
 ---
 

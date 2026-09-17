@@ -11,8 +11,19 @@
 #
 #     venv/bin/pip install -r requirements.txt
 #
-# Solo van las dos que importamos nosotros. Lo demas (httpx, anyio, certifi,
+# Solo van las que importamos nosotros. Lo demas (httpx, anyio, certifi,
 # h11, httpcore, idna) lo arrastra python-telegram-bot y lo resuelve pip.
 
 python-telegram-bot==22.8
 python-dotenv==1.2.3
+
+# Para diario/entender.py (el texto suelto que se clasifica antes de ir al
+# diario). El import está DENTRO de la función que la usa, así que sin esto
+# instalado el bot arranca igual y el mensaje sigue yendo al diario como
+# siempre — entender.configurado() corta antes de llegar aquí mientras no
+# haya ANTHROPIC_API_KEY en el .env. Solo hace falta instalarla el día que
+# se ponga esa clave. Version sin fijar a un dia concreto todavia porque no
+# está instalada en Madre: la primera vez que se active, fijar aquí la que
+# quede instalada y probar un mensaje suelto de verdad, igual que con las
+# de arriba.
+anthropic==1.6.0
