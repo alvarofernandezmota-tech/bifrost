@@ -36,3 +36,17 @@ anthropic==1.6.0
 # se use. También hace falta `ffmpeg` como paquete del sistema —eso no lo
 # instala pip— para poder leer el .oga que manda Telegram.
 faster-whisper==1.1.1
+
+# `requests` va aquí porque faster-whisper NO lo declara y sin embargo lo
+# importa: `faster_whisper/utils.py` línea 8, `import requests`, a pelo.
+#
+# Funcionaba de rebote porque se lo traía `huggingface-hub`. La 1.x se pasó a
+# `httpx` y dejó de traerlo, así que en una instalación nueva —la de Madre del
+# 2026-09-17— el paquete se instala «bien» y revienta al primer uso con un
+# `ModuleNotFoundError: No module named 'requests'`, hablando de un paquete
+# que nadie había pedido.
+#
+# Comprobado leyendo los imports del wheel 1.1.1: de lo que importa
+# (av, ctranslate2, huggingface_hub, numpy, requests, tokenizers, tqdm) este
+# es el ÚNICO que falta en su metadata. Los demás vienen solos.
+requests==2.34.2
