@@ -95,3 +95,43 @@ class TestLaPlantillaDelEnv(unittest.TestCase):
         for pista in ("sk-ant-", "sk-or-v1-", ":AA"):
             with self.subTest(pista=pista):
                 self.assertNotIn(pista, texto)
+
+
+class TestNingunSecretoSePuedeColar(unittest.TestCase):
+    """El `.gitignore` tiene que cubrir los primos del `.env`, no solo el `.env`.
+
+    Sale de un susto real. La noche del 2026-09-18, arreglando un `.env` que
+    un editor habia estropeado, quedo un `.env.bak` en Madre con el token de
+    Telegram dentro. `.env` estaba ignorado; `.env.bak` no, y `estado.sh` lo
+    canto como «1 fichero sin commitear». Un `git add -A` lo habria subido a
+    un repositorio PUBLICO, y un token en el historial de git no se quita
+    borrando el fichero: hay que rotarlo.
+
+    Se prueba por patron y no por nombre a proposito: `.env.bak` es el que
+    paso, pero `.env.old`, `.env.2` o `.env.produccion` son el mismo fallo.
+    """
+
+    IGNORADOS = (".env", ".env.bak", ".env.old", ".env.local", ".env.produccion")
+
+    def reglas(self) -> list:
+        return [ln.strip() for ln
+                in (RAIZ / ".gitignore").read_text(encoding="utf-8").splitlines()
+                if ln.strip() and not ln.strip().startswith("#")]
+
+    def test_el_patron_cubre_los_primos_del_env(self):
+        self.assertIn(".env.*", self.reglas(),
+                      "sin `.env.*`, un `.env.bak` con el token dentro es "
+                      "commiteable en un repo publico")
+
+    def test_pero_el_ejemplo_se_salva(self):
+        # `.env.*` tambien taparia `.env.example`, que SI tiene que viajar
+        # con el repo: es de donde se copia la plantilla en una maquina nueva.
+        self.assertIn("!.env.example", self.reglas())
+        self.assertTrue((RAIZ / ".env.example").exists())
+
+    def test_y_la_excepcion_va_despues_del_patron(self):
+        # En git manda la ultima regla que casa. Con `!.env.example` ANTES de
+        # `.env.*`, el ejemplo quedaria ignorado igual y el fallo no se veria
+        # hasta clonar en limpio y no encontrar la plantilla.
+        reglas = self.reglas()
+        self.assertLess(reglas.index(".env.*"), reglas.index("!.env.example"))
