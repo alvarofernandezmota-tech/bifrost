@@ -21,7 +21,7 @@ from telegram.ext import ContextTypes
 
 from handlers.texto import procesar
 from utils.respuestas import responder, responder_si_puedo
-from utils.voz import Whisper, escuchar
+from utils.voz import MINUTOS_EN_MEMORIA, Whisper, escuchar
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +40,24 @@ def _whisper():
     if _transcriptor is None:
         _transcriptor = Whisper()
     return _transcriptor
+
+
+def soltar_si_esta_ocioso() -> bool:
+    """Suelta el modelo de Whisper si lleva rato sin usarse.
+
+    Lo llama el bucle de `handlers/recordatorios.py`, que ya late cada
+    minuto. Montar un segundo temporizador solo para esto sería maquinaria
+    por maquinaria: hay un latido, y se aprovecha.
+
+    Un transcriptor de pruebas no sabe soltar nada, y no pasa nada: se
+    pregunta antes de pedírselo.
+    """
+    soltar = getattr(_transcriptor, "soltar_si_lleva_ocioso", None)
+    if soltar is None or not soltar():
+        return False
+    logger.info("🎙️ Whisper suelto: llevaba %d min sin usarse (vuelve casi "
+                "un giga de memoria)", MINUTOS_EN_MEMORIA)
+    return True
 
 
 async def mensaje_voz(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
