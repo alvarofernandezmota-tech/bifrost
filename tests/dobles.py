@@ -126,11 +126,37 @@ class DemasiadoLargo(Exception):
     """Lo que devuelve Telegram cuando el mensaje pasa de 4096: BadRequest."""
 
 
+class Voz:
+    """Un `message.voice` de Telegram: lo justo que usa handlers/voz.py."""
+
+    def __init__(self, duration: int = 3, file_id: str = "voz-1"):
+        self.duration = duration
+        self.file_id = file_id
+
+
+class ArchivoFalso:
+    """Lo que devuelve `context.bot.get_file()`: sabe "descargarse" a un Path."""
+
+    def __init__(self, contenido: bytes = b"audio de mentira"):
+        self.contenido = contenido
+
+    async def download_to_drive(self, ruta) -> None:
+        Path(ruta).write_bytes(self.contenido)
+
+
+class BotFalso:
+    """Lo justo de `context.bot` que usa mensaje_voz: traerse el fichero."""
+
+    async def get_file(self, file_id: str) -> ArchivoFalso:
+        return ArchivoFalso()
+
+
 class Mensaje:
-    def __init__(self, texto: str = "", entidades=None, responde_a=None):
+    def __init__(self, texto: str = "", entidades=None, responde_a=None, voz: Voz | None = None):
         self.text = texto
         self.entities = entidades or []
         self.reply_to_message = responde_a
+        self.voice = voz
         self.respuestas: list[str] = []
         self.marcados: list = []  # el reply_markup de cada respuesta; None si no llevaba
 
@@ -163,7 +189,8 @@ class Consulta:
 
 class Actualizacion:
     def __init__(self, texto: str = "", entidades=None, responde_a=None,
-                 boton: str | None = None, chat_id: int = 1, editado: bool = False):
+                 boton: str | None = None, chat_id: int = 1, editado: bool = False,
+                 voz: Voz | None = None):
         self.effective_chat = Chat(chat_id)
         # Un mensaje editado no tiene `message`, tiene `edited_message`. El
         # bot lo deja fuera con un filtro, pero si alguno se colara,
@@ -175,7 +202,7 @@ class Actualizacion:
             self.message = None
             self.callback_query = None
         elif boton is None:
-            self.message = Mensaje(texto, entidades, responde_a)
+            self.message = Mensaje(texto, entidades, responde_a, voz=voz)
             self.callback_query = None
         else:
             # Al tocar un botón no hay `message`: Telegram manda un
@@ -196,6 +223,7 @@ class Actualizacion:
 class Contexto:
     def __init__(self, *args: str):
         self.args = list(args)
+        self.bot = BotFalso()
 
 
 class CasoBot(unittest.TestCase):
@@ -268,6 +296,12 @@ class CasoBot(unittest.TestCase):
         # que lo ponga no manche a la siguiente, sea cual sea el orden.
         texto._preguntar = None
 
+        # Mismo motivo, para handlers/voz.py: sin esto, la primera prueba
+        # que ponga un transcriptor falso se lo dejaría puesto a las que
+        # corran después.
+        from handlers import voz
+        voz._transcriptor = None
+
     def tearDown(self):
         self._tmp.cleanup()
 
@@ -301,6 +335,18 @@ class CasoBot(unittest.TestCase):
         upd = Actualizacion(texto, entidades)
         self._correr(mensaje_libre(upd, None))
         return upd.message.respuestas[-1] if upd.message.respuestas else ""
+
+    def nota_de_voz(self, duration: int = 3, file_id: str = "voz-1") -> list:
+        """Manda una nota de voz. Devuelve TODAS las respuestas, en orden:
+
+        mensaje_voz() contesta dos veces si oye algo —lo que ha entendido, y
+        el resultado—, así que la última no basta para probarlo entero, a
+        diferencia de texto_libre (que solo contesta una vez).
+        """
+        from handlers.voz import mensaje_voz
+        upd = Actualizacion(voz=Voz(duration, file_id))
+        self._correr(mensaje_voz(upd, Contexto()))
+        return upd.message.respuestas
 
     @staticmethod
     def _contexto_sin_args() -> Contexto:

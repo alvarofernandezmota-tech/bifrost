@@ -20,6 +20,7 @@ from handlers.menu import boton, comando_menu, respuesta_al_menu
 from handlers.secciones import comando_aprendo, comando_plan, comando_siento
 from handlers.tarea import comando_tarea, comando_tareas
 from handlers.texto import mensaje_libre
+from handlers.voz import mensaje_voz
 from utils.auth import filtro_autorizado
 from utils.respuestas import responder, responder_si_puedo
 
@@ -91,6 +92,7 @@ async def comando_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         "/habito deporte\n"
         "/hoy — el día de un vistazo\n\n"
         "O escribe sin más: lo que mandes sin comando va al diario de hoy.\n"
+        "También puedes mandar una nota de voz: la oigo y hago lo mismo.\n"
         "Y /menu te da botones, para no escribir ni el comando.\n"
         "Pulsa «/» para ver todos los comandos, o /help para el detalle."
     )
@@ -163,6 +165,9 @@ async def comando_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "SIN COMANDO\n"
         "Escribe y ya: cualquier mensaje suelto se apunta en el diario de hoy,\n"
         "igual que /diario.\n\n"
+        "NOTA DE VOZ\n"
+        "Mándala y ya: te digo lo que he oído y sigue el mismo camino que si\n"
+        "lo hubieras escrito.\n\n"
         "EL DÍA\n"
         "/hoy                      diario, citas, tareas y hábitos juntos\n"
         "/hoy ayer                 el de otro día (o antes de ayer, el lunes, 2026-09-03)\n\n"
@@ -245,6 +250,12 @@ def main() -> None:
     # El ultimo: cualquier texto que no sea un comando va al diario de hoy.
     solo_texto = filters.TEXT & ~filters.COMMAND & autorizado
     app.add_handler(MessageHandler(solo_texto, mensaje_libre))
+
+    # Una nota de voz: se transcribe y sigue el mismo camino que un texto
+    # suelto (handlers/voz.py). No compite con los de arriba: un mensaje de
+    # Telegram es voz O texto, nunca las dos cosas.
+    nota_de_voz = filters.VOICE & autorizado
+    app.add_handler(MessageHandler(nota_de_voz, mensaje_voz))
 
     # El ultimo de la cadena: lo que no atrape ningun handler.
     app.add_error_handler(error_no_atrapado)

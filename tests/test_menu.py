@@ -118,13 +118,14 @@ class TestLaPuertaEstaCerrada(unittest.TestCase):
         # Que la lista de arriba no este vacia por haberse quedado sin mirar.
         self.assertGreaterEqual(len(_llamadas("CommandHandler")), 15)
 
-    def test_los_dos_handlers_de_texto_tambien_van_filtrados(self):
-        # El texto suelto y las respuestas al menu escriben en el diario igual
-        # que /diario: si pasan sin filtro, la puerta esta abierta por ahi.
+    def test_los_tres_handlers_de_mensaje_tambien_van_filtrados(self):
+        # El texto suelto, las respuestas al menu y las notas de voz escriben
+        # en el diario igual que /diario: si pasan sin filtro, la puerta esta
+        # abierta por ahi.
         mensajes = _llamadas("MessageHandler")
-        self.assertEqual(len(mensajes), 2, "han cambiado los MessageHandler: revisa esta prueba")
+        self.assertEqual(len(mensajes), 3, "han cambiado los MessageHandler: revisa esta prueba")
         fuente = BOT_PY.read_text(encoding="utf-8")
-        for nombre in ("respuestas", "solo_texto"):
+        for nombre in ("respuestas", "solo_texto", "nota_de_voz"):
             with self.subTest(filtro=nombre):
                 linea = next(ln for ln in fuente.splitlines()
                              if ln.strip().startswith(f"{nombre} = "))
