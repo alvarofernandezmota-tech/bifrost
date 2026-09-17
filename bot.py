@@ -17,6 +17,7 @@ from handlers.entrada import comando_entrada
 from handlers.habito import comando_habito, comando_habitos
 from handlers.hoy import comando_hoy
 from handlers.menu import boton, comando_menu, respuesta_al_menu
+from handlers.recordatorios import arrancar as arrancar_recordatorios
 from handlers.secciones import comando_aprendo, comando_plan, comando_siento
 from handlers.tarea import comando_tarea, comando_tareas
 from handlers.texto import mensaje_libre
@@ -78,6 +79,21 @@ async def registrar_menu(app: Application) -> None:
         logger.info("✅ Menú de comandos registrado (%d comandos)", len(MENU))
     except Exception:
         logger.exception("No se pudo registrar el menú de comandos; el bot sigue")
+
+
+async def al_arrancar(app: Application) -> None:
+    """Lo que se hace una vez, al levantar el bot.
+
+    El menú y el bucle de recordatorios (handlers/recordatorios.py), que es
+    lo único que habla sin que le hablen. Los dos van envueltos para que un
+    fallo aquí no impida arrancar: un bot sin menú o sin avisos sigue siendo
+    un bot; un bot que no arranca, no.
+    """
+    await registrar_menu(app)
+    try:
+        arrancar_recordatorios(app)
+    except Exception:
+        logger.exception("No se pudieron arrancar los recordatorios; el bot sigue")
 
 
 async def comando_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -205,7 +221,7 @@ def main() -> None:
         raise ValueError("TELEGRAM_BOT_TOKEN no encontrado en .env")
 
     logger.info("✅ Iniciando bot de Telegram...")
-    app = Application.builder().token(TOKEN).post_init(registrar_menu).build()
+    app = Application.builder().token(TOKEN).post_init(al_arrancar).build()
 
     # Nunca es None: sin ids validos en el .env, el filtro no deja pasar a
     # nadie y auth.py lo grita por el log. Cerrado por defecto a proposito.
