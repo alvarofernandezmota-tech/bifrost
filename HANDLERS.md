@@ -140,6 +140,49 @@ algo que antes tampoco reconocía nadie.
 
 ---
 
+## *(nota de voz)*
+
+**Módulo**: `handlers/voz.py` → `utils/voz.py` (Whisper) → `texto.procesar()`
+
+Se descarga la nota, se transcribe **en local** con `faster-whisper`, se dice
+lo que se ha oído, y a partir de ahí es un mensaje suelto de toda la vida:
+mismo `procesar()` que el texto, así que puede acabar en una tarea, un
+hábito, una cita, un apunte o el diario.
+
+Lo transcrito se dice **siempre, antes de actuar**. Whisper se come tildes y
+palabras sueltas, y esto escribe en un diario que no se relee línea a línea:
+si oye mal, tiene que verse, no colarse callado.
+
+Transcribir es CPU y tarda, así que va por `asyncio.to_thread` por el mismo
+motivo que `sincronizar()`: dentro de la corrutina congelaría el bot para
+**todos** los chats. Una nota de más de `DURACION_MAXIMA` (180 s) se rechaza
+sin transcribirla. Sin `faster-whisper` instalado el bot arranca igual: solo
+falla la nota de voz, y el mensaje dice el `pip` exacto que hay que usar —
+que no es el que contesta a `pip` cuando hay más de un Python.
+
+---
+
+## *(recordatorios: lo único que habla sin que le hablen)*
+
+**Módulo**: `handlers/recordatorios.py` → `diario/recordatorios.py`
+
+Un bucle de `asyncio` que cada minuto pregunta qué citas empiezan dentro de
+los próximos 30 minutos y no se han avisado. Arranca en `post_init` y se
+cancela en `post_shutdown`.
+
+Tres cosas aquí no son estilo, son lo que separa esto de convertirse en spam
+o en silencio:
+
+- **Se anota después de mandar**, y solo lo que llegó a alguien. Al revés, un
+  fallo de Telegram daría la cita por avisada sin que nadie la leyera.
+- **`avisar_una_vez()` no lanza nunca.** Quien la llama es un bucle infinito:
+  una excepción ahí deja el bot mudo para siempre sin que nada lo diga.
+- **La tarea se guarda en el módulo.** `asyncio.create_task` no guarda una
+  referencia fuerte; sin guardarla, el recolector de basura puede llevarse el
+  bucle a media ejecución.
+
+---
+
 ## `/siento`, `/aprendo` y `/plan`
 
 **Módulo**: `handlers/secciones.py` → `organizar_texto(..., seccion=...)` de

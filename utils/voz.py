@@ -60,15 +60,42 @@ class Whisper:
             try:
                 from faster_whisper import WhisperModel
             except ImportError as error:
-                raise RuntimeError(
-                    "falta faster-whisper para este Python. Instálalo con el "
-                    "pip de ESTE intérprete, que no tiene por qué ser el que "
-                    f"contesta a `pip`:\n      {sys.executable} -m pip install "
-                    "faster-whisper"
-                ) from error
+                raise RuntimeError(self._por_que_no_carga(error)) from error
             # int8 en CPU: es lo que hace esto viable sin GPU.
             self._motor = WhisperModel(self.modelo, device="cpu", compute_type="int8")
         return self._motor
+
+    @staticmethod
+    def _por_que_no_carga(error: ImportError) -> str:
+        """El mensaje de «no carga», diciendo cuál de las dos cosas pasa.
+
+        `faster_whisper` arrastra `ctranslate2`, `onnxruntime`, `av` y
+        `tokenizers`, todos compilados. Si cualquiera de ellos revienta al
+        importarse —una ABI que no cuadra, una .so que falta—, lo que sale
+        es un `ImportError` **que no es el de faster-whisper**.
+
+        Este mensaje decía «falta faster-whisper, instálalo» en los dos
+        casos, y eso pasó de verdad en Madre el 2026-09-17: el paquete
+        estaba instalado en el venv correcto y el bot seguía pidiendo que
+        se instalara. Media hora persiguiendo un fantasma, porque el aviso
+        hablaba del paquete que sí estaba.
+
+        Ahora se distingue por el nombre del módulo que falló, y en los dos
+        casos va el error de verdad detrás: el que no se puede leer es el
+        que no se puede arreglar.
+        """
+        culpable = (getattr(error, "name", "") or "").split(".")[0]
+        if culpable in ("", "faster_whisper"):
+            return (
+                "falta faster-whisper para este Python. Instálalo con el "
+                "pip de ESTE intérprete, que no tiene por qué ser el que "
+                f"contesta a `pip`:\n      {sys.executable} -m pip install "
+                f"faster-whisper\n\n(el error tal cual: {error})")
+        return (
+            f"faster-whisper está instalado, pero no puede cargar: {error}\n\n"
+            f"El que falla es «{culpable}», no faster-whisper. Suele ser una "
+            "versión compilada que no cuadra con este Python. Para verlo "
+            f"entero:\n      {sys.executable} -c \"import {culpable}\"")
 
     def transcribir(self, audio: Path) -> str:
         if not audio.exists():
