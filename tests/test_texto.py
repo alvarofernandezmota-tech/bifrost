@@ -119,5 +119,60 @@ class TestCaeAlDiarioComoAntes(CasoBot):
         self.assertIn("Apuntado en el diario", respuesta)
 
 
+class TestUnaPreguntaSeContesta(CasoBot):
+    """La rama que NO escribe: lee los resúmenes y contesta en prosa.
+
+    Que no escriba es lo importante, y aquí se comprueba por donde duele:
+    mirando el diario y los JSON después. `diario/tests/test_conversar.py`
+    lo vigila además sobre el código de `conversar.py`, que es lo que
+    impide que alguien abra la puerta sin darse cuenta.
+    """
+
+    def test_contesta_y_no_escribe_nada(self):
+        texto._preguntar = _preguntar(intencion="pregunta", confianza="alta")
+        texto._responder_pregunta = lambda pregunta, contexto: "Dos tareas y ninguna cita."
+        respuesta = self.texto_libre("¿qué tengo hoy?")
+        self.assertIn("Dos tareas y ninguna cita.", respuesta)
+        # Ni al diario, ni a tareas.
+        self.assertNotIn("¿qué tengo hoy?", self.seccion(HOY))
+        self.assertEqual(self.tareas.cargar(), [])
+
+    def test_le_llega_la_pregunta_entera(self):
+        # `texto` lo rellena entender() copiando la frase: si algún día se
+        # le pide al modelo que la repita y se le olvida, esto se cae.
+        visto = {}
+        texto._preguntar = _preguntar(intencion="pregunta", confianza="alta")
+
+        def espiar(pregunta, contexto):
+            visto["pregunta"] = pregunta
+            return "vale"
+
+        texto._responder_pregunta = espiar
+        self.texto_libre("¿voy al dentista el jueves?")
+        self.assertEqual(visto["pregunta"], "¿voy al dentista el jueves?")
+
+    def test_si_no_se_puede_contestar_cae_al_diario(self):
+        # Sin clave, red caída o respuesta vacía: `responder()` da None y
+        # esto se comporta como si la función no existiera. Nunca se pierde
+        # el mensaje por no poder contestarlo.
+        texto._preguntar = _preguntar(intencion="pregunta", confianza="alta")
+        texto._responder_pregunta = lambda pregunta, contexto: None
+        respuesta = self.texto_libre("¿qué tengo hoy?")
+        self.assertIn("Apuntado en el diario", respuesta)
+        self.assertIn("¿qué tengo hoy?", self.seccion(HOY))
+
+    def test_una_pregunta_con_dudas_ni_se_intenta(self):
+        # Confianza media: entender() devuelve None y no se llega a
+        # `conversar`. Mejor apuntarlo que contestar a lo que no era.
+        texto._preguntar = _preguntar(intencion="pregunta", confianza="media")
+
+        def explota(*_):
+            raise AssertionError("no debería preguntarse nada")
+
+        texto._responder_pregunta = explota
+        self.texto_libre("me pregunto si irá bien")
+        self.assertIn("me pregunto si irá bien", self.seccion(HOY))
+
+
 if __name__ == "__main__":
     unittest.main()

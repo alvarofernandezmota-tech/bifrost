@@ -36,6 +36,7 @@ from utils.midgaror import modulo
 from utils.respuestas import breve, dia, responder, responder_si_puedo
 
 agenda = modulo("agenda")
+conversar = modulo("conversar")
 entender = modulo("entender")
 fechas = modulo("fechas")
 habitos = modulo("habitos")
@@ -60,6 +61,11 @@ AVISO_COMANDO = (
 # En producción es `None`, y `entender()` usa el suyo si hay clave puesta.
 _preguntar = None
 
+# Lo mismo para el otro lado, el que lee y contesta (`conversar.responder`).
+# Van separados porque son dos llamadas distintas con dos firmas distintas:
+# `entender` recibe una frase, `conversar` recibe frase y contexto.
+_responder_pregunta = None
+
 
 async def _subir(ruta, mensaje: str) -> str:
     # sincronizar() hace git commit y git push: hasta 90 s con mala red.
@@ -79,7 +85,22 @@ async def _enrutar(update: Update, e) -> None:
     libre: cada intención va a la misma función de siempre, con los mismos
     datos que le pasaría su comando.
     """
-    if e.intencion == "tarea":
+    if e.intencion == "pregunta":
+        # La única rama que no escribe nada: lee los resúmenes y contesta.
+        # `conversar` no importa ni una función que escriba —lo vigila
+        # `diario/tests/test_conversar.py` sobre el propio fichero—, así que
+        # esta rama no puede tocar un JSON aunque el modelo se empeñe.
+        #
+        # `to_thread` porque `responder()` llama a la API y puede tardar
+        # segundos: dentro de la corrutina congelaría el bot entero, igual
+        # que pasaba con `sincronizar`.
+        respuesta = await asyncio.to_thread(
+            conversar.responder, e.texto or "", _responder_pregunta)
+        if respuesta is None:
+            # Sin clave, red caída o respuesta vacía. Al diario, como todo.
+            raise ValueError("no se pudo contestar la pregunta")
+        await responder(update, respuesta)
+    elif e.intencion == "tarea":
         if not e.texto:
             raise ValueError("tarea sin texto")
         t = tareas.agregar(e.texto)
