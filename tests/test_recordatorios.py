@@ -98,5 +98,31 @@ class TestAvisar(CasoAvisos):
         self.assertEqual(self.avisar(BotQueApunta()), 0)
 
 
+
+class TestElBucleSeRecogeAlApagar(CasoAvisos):
+    """El fallo visto en Madre el 2026-09-17, en el primer arranque real."""
+
+    def test_arrancar_guarda_la_referencia_y_parar_la_cancela(self):
+        import asyncio
+
+        async def ciclo():
+            tarea = recordatorios.arrancar(App(BotQueApunta()))
+            # La referencia se guarda en el módulo: sin eso, el recolector
+            # de basura puede llevarse el bucle a media ejecución.
+            self.assertIs(recordatorios._tarea, tarea)
+            self.assertFalse(tarea.done())
+            await recordatorios.parar(None)
+            # Cancelada y recogida: nada pendiente que asyncio pueda gritar
+            # al cerrarse («Task was destroyed but it is pending!»).
+            self.assertTrue(tarea.cancelled())
+            self.assertIsNone(recordatorios._tarea)
+
+        asyncio.run(ciclo())
+
+    def test_parar_sin_haber_arrancado_no_revienta(self):
+        import asyncio
+        recordatorios._tarea = None
+        asyncio.run(recordatorios.parar(None))
+
 if __name__ == "__main__":
     unittest.main()
