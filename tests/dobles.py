@@ -295,6 +295,11 @@ class CasoBot(unittest.TestCase):
         # de entender.py: aquí se deja limpio en cada prueba para que una
         # que lo ponga no manche a la siguiente, sea cual sea el orden.
         texto._preguntar = None
+        # Y el otro lado: el que lee y contesta una pregunta. Dejarlo en
+        # None aquí no basta para que no se llame a la API —`conversar`
+        # también mira la clave—, pero sí evita que una prueba que ponga su
+        # respuesta falsa se la deje puesta a la siguiente.
+        texto._responder_pregunta = None
 
         # Mismo motivo, para handlers/voz.py: sin esto, la primera prueba
         # que ponga un transcriptor falso se lo dejaría puesto a las que
