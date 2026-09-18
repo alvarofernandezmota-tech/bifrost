@@ -149,7 +149,12 @@ async def procesar(update: Update, texto: str) -> None:
     filtra lo que empieza por «/» —una transcripción nunca puede empezar por
     ahí de casualidad, así que `mensaje_voz` no repite ese aviso.
     """
-    entendido = entender.entender(texto, preguntar=_preguntar)
+    # to_thread por el mismo motivo que en la rama "pregunta", más abajo:
+    # con MIDGAROR_LLM=ollama la llamada corre en la CPU de Madre y puede
+    # tardar varios segundos (TOPE_SEGUNDOS_OLLAMA en entender.py). Sin
+    # sacarla del hilo del bucle de eventos, esos segundos congelan el bot
+    # entero para todos los chats mientras clasifica uno solo.
+    entendido = await asyncio.to_thread(entender.entender, texto, _preguntar)
     if entendido is not None:
         try:
             await _enrutar(update, entendido)
