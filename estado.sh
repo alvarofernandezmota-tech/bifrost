@@ -27,7 +27,14 @@ echo "═══ bifrost ═══"
 estado=$(systemctl is-active bifrost 2>/dev/null || true)
 case "$estado" in
   active) verde "servicio:  active" ;;
-  "")     rojo  "servicio:  la unidad no existe (¿es un servicio de usuario?)" ;;
+  # Aqui ponia «(¿es un servicio de usuario?)», y apunta justo al reves:
+  # bifrost es de SISTEMA (WantedBy=multi-user.target, instalado con sudo cp
+  # en /etc/systemd/system). Medido el 2026-09-18: `systemctl --user status
+  # bifrost` contesta «could not be found» y el de sistema lo da «active».
+  # Esa pista mandaba a buscar donde no esta.
+  "")     rojo  "servicio:  la unidad no existe en el gestor del sistema"
+          rojo  "           ¿la instalaste?  sudo cp systemd/bifrost.service /etc/systemd/system/"
+          rojo  "           y luego:         sudo systemctl daemon-reload && sudo systemctl enable --now bifrost" ;;
   *)      rojo  "servicio:  $estado"
           echo "           lo último del log:"
           journalctl -u bifrost -n 6 --no-pager 2>/dev/null | sed 's/^/           /'
@@ -158,6 +165,87 @@ case "$motor" in
     rojo "cerebro:   MIDGAROR_LLM=«$motor» no es un valor que se entienda."
     rojo "           Son: anthropic, ollama, no. Con esto va como si no hubiera nada." ;;
 esac
+# ---- el diario: donde se escribe, y si se escribe -----------------------
+#
+# Esta seccion faltaba, y su ausencia se noto el 2026-09-18: ese dia esto salia
+# ENTERO EN VERDE mientras el backend del diario estaba en un sitio y los datos
+# en otro. Un diagnostico que dice que el bot esta bien sin haber mirado si el
+# diario se escribe no esta diciendo lo que parece.
+#
+# Y hay un detalle que obliga a hacerlo asi y no de la forma facil: MIDGAROR_DATOS
+# **solo existe en la unidad**, no en una terminal (ADR-023). Leerla del entorno
+# de este script da vacio SIEMPRE, y eso se leeria como «no esta configurada»
+# cuando si lo esta. Hay que preguntarle a systemd.
+echo "diario:"
+
+# El entorno de VERDAD del servicio, no el de esta terminal. Se parte por
+# espacios, que vale para rutas sin espacios —las de aqui no los tienen— y no
+# necesita nada instalado.
+entorno=$(systemctl show bifrost -p Environment --value 2>/dev/null | tr ' ' '\n')
+del_servicio() { echo "$entorno" | sed -n "s/^$1=//p" | tail -1; }
+del_env()      { sed -n "s/^$1=//p" .env 2>/dev/null | tail -1; }
+# La unidad manda sobre el .env: es lo que systemd le pone al proceso.
+backend=$(del_servicio DIARIO_BACKEND); [ -n "$backend" ] || backend=$(del_env DIARIO_BACKEND)
+datos=$(del_servicio MIDGAROR_DATOS);   [ -n "$datos" ]   || datos=$(del_env MIDGAROR_DATOS)
+
+case "${backend:-json}" in
+  postgres)
+    echo "  backend:  postgres"
+    # psycopg no esta en requirements.txt: es opcional y solo hace falta con
+    # este backend. Sin el, el primer /tarea se cae. Ya paso.
+    if ! "$PY" -c "import psycopg" >/dev/null 2>&1; then
+      rojo "  ⚠️  falta «psycopg» en $PY, y con backend=postgres el primer /tarea se cae"
+      rojo "      instalalo AHI:  $PY -m pip install 'psycopg[binary]'"
+      rojo "      (con «$PY -m pip», nunca «venv/bin/pip»: ese lleva otra ruta en el shebang)"
+      url=""   # sin la libreria no hay nada que preguntarle a la base
+    else
+      url=$(del_servicio DIARIO_DATABASE_URL); [ -n "$url" ] || url=$(del_env DIARIO_DATABASE_URL)
+    fi
+    if [ -z "$url" ]; then
+      # Sin psycopg ya se ha dicho arriba; aqui solo se avisa si la libreria
+      # esta y lo que falta es la URL.
+      "$PY" -c "import psycopg" >/dev/null 2>&1 && \
+        rojo "  ⚠️  backend=postgres pero no hay DIARIO_DATABASE_URL en la unidad ni en el .env"
+    else
+      # La URL lleva contrasena: se usa, no se imprime. Solo sale el recuento.
+      DIARIO_DATABASE_URL="$url" "$PY" - <<'EOF' 2>&1 | sed 's/^/  /'
+import os, sys
+try:
+    import psycopg
+    with psycopg.connect(os.environ["DIARIO_DATABASE_URL"]) as c:
+        for tabla, col in (("tareas","creada"),("citas","creada"),
+                           ("apuntes","fecha"),("habitos_registro","fecha")):
+            n, ult = c.execute(f"select count(*), max({col})::text from {tabla}").fetchone()
+            print(f"{tabla:18} {n:>5} filas   ultima: {ult or '—'}")
+except Exception as e:
+    print(f"NO CONECTA: {type(e).__name__}: {e}"); sys.exit(1)
+EOF
+    fi ;;
+  json)
+    echo "  backend:  json (ficheros)"
+    if [ -z "$datos" ]; then
+      echo "  carpeta:  la del repo (MIDGAROR_DATOS sin definir)"
+    elif [ ! -d "$datos" ]; then
+      rojo "  ⚠️  MIDGAROR_DATOS apunta a «$datos» y esa carpeta NO existe"
+    else
+      echo "  carpeta:  $datos"
+      # El fallo que el ADR-016 llama «el mas caro posible»: sin la carpeta en
+      # ReadWritePaths, el bot contesta como si nada y no escribe NADA.
+      if ! systemctl show bifrost -p ReadWritePaths --value 2>/dev/null | grep -qF "$datos"; then
+        rojo "  ⚠️  esa carpeta NO esta en ReadWritePaths de la unidad."
+        rojo "      El bot contestara como si nada y no escribira nada (ADR-016)."
+      fi
+      ultimo=$(git -C "$datos" log -1 --format='%cr — %s' 2>/dev/null)
+      if [ -z "$ultimo" ]; then
+        rojo "  ⚠️  «$datos» no es un repo git, o no tiene ni un commit"
+      else
+        echo "  ultimo:   $ultimo"
+      fi
+    fi ;;
+  *)
+    rojo "  ⚠️  DIARIO_BACKEND=«$backend» no se entiende. Son: json, postgres." ;;
+esac
+
 if "$PY" -c "import faster_whisper" >/dev/null 2>&1; then
   verde "voz:       lista"
 else
