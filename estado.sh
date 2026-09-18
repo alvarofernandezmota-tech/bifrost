@@ -113,49 +113,50 @@ comprobar faster_whisper  "las notas de voz"
 # Esto es lo que más se olvida: la función está desplegada y dormida porque
 # falta una línea, y nada falla. No hay error que mirar.
 #
-# Desde ADR-022 hay dos motores, y el primero que hay que mirar es
-# MIDGAROR_LLM: sin ella (o vacía), el motor es Claude si hay clave y nada
-# si no la hay, igual que antes de que existiera. Con ella puesta a
-# ollama/local no hace falta ninguna clave — hace falta Ollama vivo y el
-# modelo bajado, que son dos fallos distintos y se distinguen aquí.
+# La clave se mide, no se enseña: solo su longitud. Un sitio vacío y un sitio
+# con el hueco puesto («sk-ant-PON-AQUI-LA-TUYA») fallan igual de silenciosos,
+# pero se arreglan distinto, así que se distinguen. Una clave de verdad pasa
+# de largo de los 40 caracteres; el hueco se queda muy corto.
+#
+# Y hay DOS motores (ADR-022), así que no basta con mirar la clave: con
+# `MIDGAROR_LLM=ollama` el cerebro está encendido sin ninguna clave, y
+# mirando solo `ANTHROPIC_API_KEY` esto diría «apagado» con el bot
+# funcionando. La lógica de aquí sigue a `entender.proveedor()`.
+clave=$(sed -n 's/^ANTHROPIC_API_KEY=//p' .env 2>/dev/null | tail -1)
 motor=$(sed -n 's/^MIDGAROR_LLM=//p' .env 2>/dev/null | tail -1 | tr '[:upper:]' '[:lower:]')
+
 case "$motor" in
   no|off|ninguno|0)
-    echo "cerebro:   apagado a mano (MIDGAROR_LLM=$motor) — todo va al diario"
-    ;;
+    echo "cerebro:   apagado a mano (MIDGAROR_LLM=$motor). Todo va al diario." ;;
   ollama|local)
+    # Ollama no necesita clave, pero sí necesita estar levantado y con el
+    # modelo bajado. Las dos cosas fallan calladas, así que se comprueban.
     url=$(sed -n 's/^MIDGAROR_OLLAMA=//p' .env 2>/dev/null | tail -1)
-    [ -n "$url" ] || url="http://127.0.0.1:11434"
-    modelo=$(sed -n 's/^MIDGAROR_LLM_MODELO=//p' .env 2>/dev/null | tail -1)
-    [ -n "$modelo" ] || modelo="qwen2.5:7b"
-    tags=$(curl -fsS --max-time 3 "$url/api/tags" 2>/dev/null)
-    if [ -z "$tags" ]; then
-      rojo "cerebro:   apagado — Ollama no contesta en $url. ¿'systemctl status ollama'?"
-    elif ! printf '%s' "$tags" | grep -qF "\"$modelo\""; then
-      rojo "cerebro:   apagado — Ollama vive pero el modelo no está bajado:"
-      rojo "           ollama pull $modelo"
+    url=${url:-http://127.0.0.1:11434}
+    quiere=$(sed -n 's/^MIDGAROR_LLM_MODELO=//p' .env 2>/dev/null | tail -1)
+    quiere=${quiere:-qwen2.5:7b}
+    if ! curl -fsS --max-time 3 "$url/api/tags" >/dev/null 2>&1; then
+      rojo "cerebro:   APAGADO — MIDGAROR_LLM=$motor pero Ollama no contesta en $url"
+      rojo "           ¿está instalado y corriendo?  systemctl status ollama"
+    elif curl -fsS --max-time 3 "$url/api/tags" 2>/dev/null | grep -q "\"$quiere\""; then
+      verde "cerebro:   encendido en LOCAL ($quiere, nada sale de esta máquina)"
     else
-      verde "cerebro:   encendido con Ollama en Madre (clasifica tarea/hábito/cita/apunte)"
-    fi
-    ;;
-  *)
-    # "" (sin decidir), "anthropic"/"claude", o cualquier otra cosa: todos
-    # caen al mismo sitio que antes de ADR-022, que es lo correcto — la
-    # clave se mide, no se enseña: solo su longitud. Un sitio vacío y un
-    # sitio con el hueco puesto («sk-ant-PON-AQUI-LA-TUYA») fallan igual de
-    # silenciosos, pero se arreglan distinto, así que se distinguen. Una
-    # clave de verdad pasa de largo de los 40 caracteres; el hueco se queda
-    # muy corto.
-    clave=$(sed -n 's/^ANTHROPIC_API_KEY=//p' .env 2>/dev/null | tail -1)
+      rojo "cerebro:   APAGADO — Ollama va, pero no tiene el modelo «$quiere»"
+      rojo "           bájalo con:  ollama pull $quiere"
+    fi ;;
+  anthropic|claude|"")
     if [ -z "$clave" ]; then
       echo "cerebro:   apagado — sin ANTHROPIC_API_KEY todo va al diario"
+      echo "           (o pon MIDGAROR_LLM=ollama para usar un modelo local)"
     elif [ "${#clave}" -lt 40 ]; then
       rojo "cerebro:   apagado — ANTHROPIC_API_KEY está puesta pero mide ${#clave} caracteres:"
       rojo "           es el hueco de ejemplo, no una clave. Todo va al diario."
     else
-      verde "cerebro:   encendido con Claude (clasifica tarea/hábito/cita/apunte)"
-    fi
-    ;;
+      verde "cerebro:   encendido en la NUBE (Claude; el texto sale hacia la API)"
+    fi ;;
+  *)
+    rojo "cerebro:   MIDGAROR_LLM=«$motor» no es un valor que se entienda."
+    rojo "           Son: anthropic, ollama, no. Con esto va como si no hubiera nada." ;;
 esac
 if "$PY" -c "import faster_whisper" >/dev/null 2>&1; then
   verde "voz:       lista"
