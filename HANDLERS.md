@@ -284,7 +284,8 @@ sale barato: el hábito raro se ve en `/habitos` del mismo día.
 
 **Módulo**: `handlers/apunte.py` → `midgaror/diario/registro/registro.py`
 
-El modelo del [ADR-012](https://github.com/alvarofernandezmota-tech/midgaror/blob/main/docs/adr/012-modelo-de-registro-diario.md).
+El modelo del ADR-012, en `docs/adr/012-modelo-de-registro-diario.md` de
+`midgaror` (repo privado, sin enlace público).
 Un **apunte** es un evento, no una casilla: `tele 3h`, `deporte`, `agua 1,5l`.
 
 | Mensaje | Qué hace |
