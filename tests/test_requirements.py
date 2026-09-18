@@ -89,6 +89,15 @@ class TestLaPlantillaDelEnv(unittest.TestCase):
     def test_esta_la_que_enciende_entender(self):
         self.assertIn("ANTHROPIC_API_KEY", self.variables_de_la_plantilla())
 
+    def test_estan_las_de_ollama_adr_022(self):
+        # Sin estas dos, alguien podia poner MIDGAROR_LLM=ollama en un .env
+        # a mano y nunca enterarse de que existen: la plantilla no las
+        # nombra, no hay pista de que el bot las lee.
+        variables = self.variables_de_la_plantilla()
+        for variable in ("MIDGAROR_LLM", "MIDGAROR_OLLAMA"):
+            with self.subTest(variable=variable):
+                self.assertIn(variable, variables)
+
     def test_la_plantilla_no_lleva_ningun_valor_de_verdad(self):
         # Una plantilla con una clave dentro es una clave publicada.
         texto = (RAIZ / ".env.example").read_text(encoding="utf-8")
