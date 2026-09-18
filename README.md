@@ -183,7 +183,7 @@ La unidad apunta a **`~/GitHub/personal/midgaror-bot`**, una copia del repo
 que es solo del bot y está siempre en `main`, no a la copia de trabajo. Un
 `git checkout` mientras el servicio está vivo le cambiaría el diario, la rama
 a la que commitea y el código que carga al reiniciar. Cómo montarla:
-[`docs/infra/bifrost.md`](https://github.com/alvarofernandezmota-tech/midgaror/blob/main/docs/infra/bifrost.md),
+`docs/infra/bifrost.md` en `midgaror` (repo privado, sin enlace público),
 sección «El bot tiene su propia copia del repo».
 
 **Antes de instalarla**, comprueba que las rutas del fichero coinciden con
@@ -347,8 +347,6 @@ Se arregla recreando el entorno y reiniciando el servicio.
 
 ## Comandos
 
-| Comando | Descripción |
-|---------|-------------|
 Los ejemplos son literales: se escribe lo que se ve, **sin `<` ni `>`**. La
 ayuda anterior los llevaba y se escribieron tal cual dos veces en el diario.
 
@@ -426,7 +424,7 @@ Telegram no contesta, se registra el fallo y el bot arranca igual.
 python3 -m unittest discover -s tests
 ```
 
-179 pruebas de los handlers, en menos de tres segundos, sin red y sin
+226 pruebas de los handlers, en menos de dos segundos, sin red y sin
 Telegram instalado: `tests/dobles.py` pone un `telegram` de mentira y un
 diario en un temporal. Detalle en [`tests/README.md`](tests/README.md).
 
@@ -471,11 +469,6 @@ una instalación al actualizar— y ese es el modo de fallo al revés: una errat
 al copiar el id (una letra `O` donde va un cero) dejaba el bot **abierto**.
 Un bot mudo se nota en un minuto; uno abierto puede tardar semanas, y para
 entonces alguien ha escrito en el diario.
-
-Lo
-avisa en el log al arrancar. Se dejó así para no romper una instalación al
-actualizar, pero es un aviso, no una opción recomendable: este bot escribe en
-tu diario.
 
 ## Problemas conocidos
 
